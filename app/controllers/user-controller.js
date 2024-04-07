@@ -1,7 +1,16 @@
 const User=require('../models/users-model')
 const jwt=require('jsonwebtoken')
 const bcryptjs=require('bcryptjs')
+const sendEmail=require('../utilities/node-mailer/email')
 const {validationResult}=require('express-validator')
+
+//otp functiion to send otp
+const generateOtp=()=>{
+    const otp=Math.round(Math.random()*10000)
+    console.log(otp)
+    return otp
+    
+}
 const usersCntrl={}
 usersCntrl.register=async(req,res)=>{
     const errors=validationResult(req)
@@ -9,6 +18,7 @@ usersCntrl.register=async(req,res)=>{
         return res.status(400).json({errors:errors.array()})
     }
     const body =req.body
+    const otp1=generateOtp()
     try{
      const user=new User(body)
     const salt=await bcryptjs.genSalt()
@@ -19,7 +29,13 @@ usersCntrl.register=async(req,res)=>{
     // if(adminCount ){
     //     return res.status(401).json({error:"admin cannot be more than one"})
     // }
+   
+    user.otp=otp1
     await user.save() 
+    sendEmail({
+        email:user.email,
+        text:`you have registerd with us , please verify your email with otp ${user.otp}`
+    })
     res.status(201).json(user)
     }catch(err){
         res.status(400).json({error:"internal server error"})

@@ -4,7 +4,10 @@ const userRegisterSchema=new Schema({
     email:String,
     phone:Number,
     password:String,
-    role:String
+    role:String,
+    otp:Number
+       
+    
 },{timestamps:true})
 const User=model('User',userRegisterSchema)
 module.exports=User

@@ -34,25 +34,36 @@ const port=3045
 // )
 // const upload=multer({storage})
 
+//user Apis
  app.post('/api/users/register',checkSchema(userRegisterSchemaValidation),usersCntrl.register)
  app.post('/api/users/login',checkSchema(usersLoginSchema),usersCntrl.login)
  app.get('/api/users/accounts',authenticateUser,usersCntrl.accounts)
  app.delete('/api/users/:id',authenticateUser,authorizeUser(["admin"]),usersCntrl.remove)
+
+ //parking space apis
  app.post('/api/parkingSpace/Register',authenticateUser,authorizeUser(["owner"]),checkSchema(ParkingSpaceSchemaValidation),parkingSpaceCntrl.register)
  app.get('/api/parkingSpace/my',authenticateUser,authorizeUser(["owner"]),parkingSpaceCntrl.mySpace)
  app.delete('/api/parkingSpace/:id',authenticateUser,authorizeUser(["owner"]),parkingSpaceCntrl.remove)
  app.get('/api/parkingSpace',parkingSpaceCntrl.list)
  app.put('/api/parkingSpace/approve/:id',authenticateUser,authorizeUser(['admin']),checkSchema(parkingSpaceApproveValidarion),parkingSpaceCntrl.approve)
  
+ //get all parking space within radius
+ app.get('/api/parkingSpace/radius',parkingSpaceCntrl.findByLatAndLog)
+
+ //find avaialble parking space
+ app.get('/api/parkingSpace/:parkingSpaceId/spaceType/:spaceTypeId',bookingCntrl.findSpace)
+
  //listing of vehicle
  app.post('/api/vehicle',authenticateUser,authorizeUser(["customer"]),vehicleCntrl.list)
  //creating of revies
  app.post('/api/revies/:parkingSpaceId',authenticateUser,authorizeUser(['customer']),checkSchema(reviesValidation),reviesCntrl.create)
 
-//find vaialble parking space
-app.get('/api/parkingSpace/availability',parkingSpaceCntrl.findSpace)
+
  //booking of parking space
  app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId',authenticateUser,authorizeUser(["customer"]),bookingCntrl.booking)
- app.listen(port,()=>{
+ app.get('/api/booking/my/:id',bookingCntrl.list)
+
+
+app.listen(port,()=>{
     console.log("server is running in " +port)
  })

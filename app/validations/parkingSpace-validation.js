@@ -3,6 +3,7 @@ const ParkingSpaceSchemaValidation={
         notEmpty:{
             errorMessage:"title is require"
         },
+
         escape:true
     },
     // ownerId:{
@@ -85,11 +86,17 @@ const ParkingSpaceSchemaValidation={
                 if(typeof value.state !="string"){
                     throw new Error("state must be a string")
                 }
-                if(typeof value.lat != 'string'){
-                    throw new Error("lat type should be string")
+                if(!Array.isArray(value.coordinates)){
+                    throw new Error("coordinates should be a array")
                 }
-                if(typeof value.log !="string"){
-                    throw new Error("log must be a string")
+                if(value.coordinates.length !=2){
+                    throw new Error("coordinates must have only 2 values")
+                }
+                if(typeof value.coordinates[0] != 'number'){
+                    throw new Error("coordinates only have number type value")
+                }
+                if( typeof value.coordinates[1] !='number'){
+                    throw new Error("coordinates only have number type value")
                 }
                 return true
             }
