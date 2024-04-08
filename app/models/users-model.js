@@ -5,7 +5,12 @@ const userRegisterSchema=new Schema({
     phone:Number,
     password:String,
     role:String,
-    otp:Number
+    otp:Number,
+    isverified:{
+        type:Boolean,
+        default:false
+
+    }
        
     
 },{timestamps:true})
