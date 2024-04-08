@@ -9,13 +9,14 @@ configDb()
 const {userRegisterSchemaValidation,usersLoginSchema}=require('./app/validations/user-validation')
 const {ParkingSpaceSchemaValidation,parkingSpaceApproveValidarion}=require('./app/validations/parkingSpace-validation')
 const {reviesValidation}=require('./app/validations/revies-validation')
+const vehicleValidationSchema=require("./app/validations/vehicle-validation")
 
 const {authenticateUser, authorizeUser}=require('./app/middlewares/auth')
 
 const usersCntrl=require('./app/controllers/user-controller')
 const parkingSpaceCntrl=require('./app/controllers/parkingSpace-controllers')
-const reviesCntrl=require('./app/controllers/revies-controller')
-const vehicleCntrl=require('./app/controllers/vehivle-controller')
+const reviewsController=require('./app/controllers/revies-controller')
+const vehicleCtlr=require("./app/controllers/vehivle-controller")
 const bookingCntrl=require('./app/controllers/booking-controller')
 const app=express()
 const port=3045
@@ -53,10 +54,17 @@ const port=3045
  //find avaialble parking space
  app.get('/api/parkingSpace/:parkingSpaceId/spaceType/:spaceTypeId',bookingCntrl.findSpace)
 
- //listing of vehicle
- app.post('/api/vehicle',authenticateUser,authorizeUser(["customer"]),vehicleCntrl.list)
- //creating of revies
- app.post('/api/revies/:parkingSpaceId',authenticateUser,authorizeUser(['customer']),checkSchema(reviesValidation),reviesCntrl.create)
+ //vehicle api's
+ app.post("/API/vehicle/register",authenticateUser,authorizeUser(["customer"]),checkSchema(vehicleValidationSchema),vehicleCtlr.create)//vehicle create
+ app.get("/API/vehicles/list",authenticateUser,authorizeUser(["customer"]),vehicleCtlr.list)//vehicles list
+ app.put("/API/vehicles/update/:id",authenticateUser,authorizeUser(["customer"]),checkSchema(vehicleValidationSchema),vehicleCtlr.update)//vehicles update
+ app.delete("/API/vehicles/remove/:id",authenticateUser,authorizeUser(["customer"]),vehicleCtlr.remove)//vehicles remove
+ // revies api's
+ app.post("/api/booking/:bookingId/parkingSpace/:parkingSpaceId",authenticateUser,authorizeUser(["customer"]),checkSchema(reviesValidation),reviewsController.create)//create review
+ app.get("/api/reviews/list",authenticateUser,reviewsController.list)//list of all reviews
+ app.get("/api/reviews/space/:id",authenticateUser,authorizeUser(["owner"]),reviewsController.spaceReview)//listing based on space
+ app.delete("/api/reviews/remove/:id",authenticateUser,authorizeUser(["customer"]),reviewsController.remove)//remove review
+ app.put("/api/reviews/update/:id",authenticateUser,authorizeUser(["customer"]),reviewsController.update)
 
 
  //booking of parking space

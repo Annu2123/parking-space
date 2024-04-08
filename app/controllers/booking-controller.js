@@ -21,6 +21,7 @@ bookingCntrl.booking = async (req, res) => {
         await booking.save()
         res.status(200).json(booking)
     } catch (err) {
+        console.log(err)
         res.status(401).json({ error: "internal server error" })
     }
 }

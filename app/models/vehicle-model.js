@@ -4,6 +4,7 @@ const vehicleSchema=new Schema({
         type:Schema.Types.ObjectId,
         ref:"User"
     },
+    vehicleNumber:String,
     vehicleName:String,
     documents:String,
     vehicleType:String,
