@@ -1,3 +1,4 @@
+const { otpvalidationSchema } = require("../../../pickParking/back-end/app/validations/userSchemaValidation")
 const User = require("../models/users-model")
 
 const userRegisterSchemaValidation={
@@ -55,13 +56,15 @@ const userRegisterSchemaValidation={
         notEmpty:{
             errorMessage:"password is require"
         },
-        isLength:{
-            options:{min:8,max:20},
-            errorMessage:"length must be greater than 8 and less 20 char"
-        },
-        isAlphanumeric:{
-            errorMessage:"password should contain alpha numeric charactor"
-        }
+        isStrongPassword:{
+            options:[{ minLowercase: 1,
+              minUppercase: 1,minNumbers:2,minSymbols:1}],
+              errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
+          },
+          isLength:{
+              options:[{min:5,max:128}],
+              errorMessage:"password length must be in between 5 to 128 long "
+          }
     },
     role:{
         notEmpty:{
@@ -87,10 +90,127 @@ const usersLoginSchema={
         notEmpty:{
             errorMessage:"paasowrd is require"
         },
-        isLength:{
-            options:{min:8,max:20},
-            errorMessage:"length should greater than 8 and less than 20"
-        }
+        isStrongPassword:{
+            options:[{ minLowercase: 1,
+              minUppercase: 1,minNumbers:2,minSymbols:1}],
+              errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
+          },
+          isLength:{
+              options:[{min:5,max:128}],
+              errorMessage:"password length must be in between 5 to 128 long "
+          }
     }
 }
-module.exports={userRegisterSchemaValidation,usersLoginSchema}
+ const usersForgotPasswordSchema={
+    email:{
+        errorMessage:"mail is required"
+    },
+    trim:true,
+    normalizeEmail:true,
+    isEmail:{
+        errorMessage:"require valide email formate"
+    },
+}
+ const usersSetPasswordSchema={
+    email:{
+        notEmpty:{
+            errorMessage:"email require"
+        },
+        trim:true,
+        normalizeEmail:true,
+        isEmail:{
+            errorMessage:"should be valide email"
+        }
+    },
+    password:{
+        notEmpty:{
+            errorMessage:"paasowrd is require"
+        },
+        isStrongPassword:{
+            options:[{ minLowercase: 1,
+              minUppercase: 1,minNumbers:2,minSymbols:1}],
+              errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
+          },
+          isLength:{
+              options:[{min:5,max:128}],
+              errorMessage:"password length must be in between 5 to 128 long "
+          }
+    },
+    otp:{
+        notEmpty:{
+            errorMessage:"otp is required"
+        },
+        isLength:{
+            options:{min:4,max:4},
+            errorMessage:"length should 4 digits"
+        }
+
+    }
+    
+}
+ const userOtpValidation={
+    email:{
+        notEmpty:{
+            errorMessage:"email require"
+        },
+        trim:true,
+        normalizeEmail:true,
+        isEmail:{
+            errorMessage:"should be valide email"
+        }
+    },
+    otp:{
+        notEmpty:{
+            errorMessage:"otp is required"
+        },
+        isLength:{
+            options:{min:4,max:4},
+            errorMessage:"length should 4 digits"
+        }
+
+    }
+
+}
+usersupdatePasswordValidationSchema={
+    oldPassword:{
+        notEmpty:{
+            errorMessage:"old password is required"
+        },
+    },
+    newPassword:{
+        notEmpty:{
+            errorMessage:"paasowrd is require"
+        },
+        isStrongPassword:{
+            options:[{ minLowercase: 1,
+              minUppercase: 1,minNumbers:2,minSymbols:1}],
+              errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
+          },
+          isLength:{
+              options:[{min:5,max:128}],
+              errorMessage:"password length must be in between 5 to 128 long "
+          }
+    },
+    changePassword:{
+        notEmpty:{
+            errorMessage:"paasowrd is require"
+        },
+        isStrongPassword:{
+            options:[{ minLowercase: 1,
+              minUppercase: 1,minNumbers:2,minSymbols:1}],
+              errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
+          },
+          isLength:{
+              options:[{min:5,max:128}],
+              errorMessage:"password length must be in between 5 to 128 long "
+          }
+    }
+    }
+module.exports={
+    userRegisterSchemaValidation,
+    usersLoginSchema,
+    usersForgotPasswordSchema,
+    usersSetPasswordSchema,
+    userOtpValidation,
+    usersupdatePasswordValidationSchema
+}
