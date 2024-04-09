@@ -14,9 +14,9 @@ const ParkingSpaceSchemaValidation={
     //         errorMessage:"id should be a mongodb id"
     //     }
     // },
-    image:{
-        notEmpty:"image is require"
-    },
+    // image:{
+    //     notEmpty:"image is require"
+    // },
     spaceTypes:{
        custom:{
         options:function (value){
@@ -68,21 +68,21 @@ const ParkingSpaceSchemaValidation={
         },
         custom:{
             options:function (value){
-                if(typeof value !='object'){
+                if(typeof value !='object'){     
                     throw new Error("it should be object")
-                }
-                if(Object.keys(value).length !=6){
+                }   
+                if(Object.keys(value).length !=5){
                     throw new Error("their must be 2 properties")
-                }
+                }  
                 if(typeof value.street !="string"){
                     throw new Error("street must be a string")
-                }
+                }    
                 if(typeof value.area !="string"){
                     throw new Error("area must be a string")
-                }
+                }    
                 if(typeof value.city !="string"){
                     throw new Error("city must be a string")
-                }
+                }  
                 if(typeof value.state !="string"){
                     throw new Error("state must be a string")
                 }

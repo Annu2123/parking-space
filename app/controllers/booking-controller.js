@@ -1,6 +1,7 @@
 const Booking = require('../models/booking-model')
 const ParkingSpace = require('../models/parkingSpace-model')
 const moment = require('moment')
+const {validationResult}=require('express-validator')
 
 const bookingCntrl = {}
 function momentConvertion(date) {
@@ -9,6 +10,10 @@ function momentConvertion(date) {
 
 
 bookingCntrl.booking = async (req, res) => {
+    const errors=validationResult(req)
+    if(!errors.isEmpty()){
+        return res.status(400).json({errors:errors.array()})
+    }
     const parkingSpaceId = req.params.parkingSpaceId
     const spaceTypesId = req.params.spaceTypesId
     const body = req.body
@@ -51,7 +56,11 @@ bookingCntrl.findSpace = async (req, res) => {
     console.log(momentEndDateTime.toDate())
 
     try {
-         
+         const parkingSpace=await ParkingSpace.findById(parkingSpaceId)
+         if(!parkingSpace){
+            return res.status(404).json({error:"parking space is not found"})
+         }
+         console.log(parkingSpace)
         const booking = await Booking.find({parkingSpaceId:parkingSpaceId,spaceTypesId:spaceTypeId,
             $or: [
                 {
@@ -74,11 +83,31 @@ bookingCntrl.findSpace = async (req, res) => {
                 }
             ]
         })
-        console.log(booking)
+        console.log(booking.length)
+        if(parkingSpace.spaceTypes[1]._id == spaceTypeId){
+            console.log("nn")
+        }else{
+            console.log("yes")
+        }
         res.json(booking)
     } catch (err) {
         console.log(err)
         res.json({ error: "internal server error" })
     }
+}
+
+bookingCntrl.myParkingSpace=async(req,res)=>{
+       try{
+        const id=req.user.id
+        const parkingSpace=await ParkingSpace.findById(id)
+        if(!parkingSpace){
+            return res.status(404).json({error:"you dont have listed parking space"})
+        }
+        const bookings=await Booking.find({parkingSpaceId:parkingSpace._id})
+        res.status(201).json(bookings)
+
+       }catch(err){
+        res.status(500).json({error:"internal server error"})
+       }
 }
 module.exports = bookingCntrl
