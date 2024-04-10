@@ -1,4 +1,3 @@
-const { otpvalidationSchema } = require("../../../pickParking/back-end/app/validations/userSchemaValidation")
 const User = require("../models/users-model")
 
 const userRegisterSchemaValidation={
@@ -90,15 +89,15 @@ const usersLoginSchema={
         notEmpty:{
             errorMessage:"paasowrd is require"
         },
-        isStrongPassword:{
-            options:[{ minLowercase: 1,
-              minUppercase: 1,minNumbers:2,minSymbols:1}],
-              errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
-          },
-          isLength:{
-              options:[{min:5,max:128}],
-              errorMessage:"password length must be in between 5 to 128 long "
-          }
+        // isStrongPassword:{
+        //     options:[{ minLowercase: 1,
+        //       minUppercase: 1,minNumbers:2,minSymbols:1}],
+        //       errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
+        //   },
+        //   isLength:{
+        //       options:[{min:5,max:128}],
+        //       errorMessage:"password length must be in between 5 to 128 long "
+        //   }
     }
 }
  const usersForgotPasswordSchema={

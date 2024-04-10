@@ -6,14 +6,14 @@ const { checkSchema } = require('express-validator')
 const configDb = require('./config/db')
 // app.use('/uploads',express.static('uploads'))
 configDb()
-// const {
-//     userRegisterSchemaValidation,
-//     usersLoginSchema,
-//     usersForgotPasswordSchema,
-//     usersSetPasswordSchema,
-//     userOtpValidation,
-//     usersupdatePasswordValidationSchema
-// } = require('./app/validations/user-validation')
+const {
+    userRegisterSchemaValidation,
+    usersLoginSchema,
+    usersForgotPasswordSchema,
+    usersSetPasswordSchema,
+    userOtpValidation,
+    usersupdatePasswordValidationSchema
+} = require('./app/validations/user-validation')
 const { ParkingSpaceSchemaValidation, parkingSpaceApproveValidarion } = require('./app/validations/parkingSpace-validation')
 const { reviesValidation } = require('./app/validations/revies-validation')
 const vehicleValidationSchema = require("./app/validations/vehicle-validation")
@@ -44,13 +44,13 @@ const upload=multer({storage})
 app.use('/uploads',express.static('uploads'))
 
 //user Apis
-// app.post('/api/users/register', checkSchema(userRegisterSchemaValidation), usersCntrl.register)
-// app.put("/api/verify/emails", checkSchema(userOtpValidation), usersCntrl.verifyEmail)
-// app.post('/api/users/login', checkSchema(usersLoginSchema), usersCntrl.login)
-// app.put("/API/update/password", authenticateUser, checkSchema(usersupdatePasswordValidationSchema), usersCntrl.updatePassword)// updatePassword
-// app.get('/api/users/accounts', authenticateUser, usersCntrl.accounts)
-// app.post("/api/users/forgotpassword", checkSchema(usersForgotPasswordSchema), usersCntrl.forgotPassword)
-// app.put("/api/users/setforgotpassword", checkSchema(usersSetPasswordSchema), usersCntrl.setFogotPassword)
+app.post('/api/users/register', checkSchema(userRegisterSchemaValidation), usersCntrl.register)
+app.put("/api/verify/emails", checkSchema(userOtpValidation), usersCntrl.verifyEmail)
+app.post('/api/users/login', checkSchema(usersLoginSchema), usersCntrl.login)
+app.put("/API/update/password", authenticateUser, checkSchema(usersupdatePasswordValidationSchema), usersCntrl.updatePassword)// updatePassword
+app.get('/api/users/accounts', authenticateUser, usersCntrl.accounts)
+app.post("/api/users/forgotpassword", checkSchema(usersForgotPasswordSchema), usersCntrl.forgotPassword)
+app.put("/api/users/setforgotpassword", checkSchema(usersSetPasswordSchema), usersCntrl.setFogotPassword)
 
 //parking space apis
 app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]), checkSchema(ParkingSpaceSchemaValidation), parkingSpaceCntrl.register)
