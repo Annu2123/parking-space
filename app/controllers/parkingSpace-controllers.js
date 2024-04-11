@@ -1,10 +1,14 @@
 const { validationResult } = require("express-validator")
 const Booking = require('../models/booking-model')
+const axios =require('axios')
 const _ = require('lodash')
 const { isPointWithinRadius } = require('geolib')
 const ParkingSpace = require("../models/parkingSpace-model")
 const parkingSpaceCntrl = {}
 
+function reverseLatLon(arr) {
+    return [arr[1], arr[0]]
+  }
 
 parkingSpaceCntrl.register = async (req,res) => {
     const errors = validationResult(req)
@@ -21,6 +25,10 @@ parkingSpaceCntrl.register = async (req,res) => {
     parkingSpace.ownerId=req.user.id
     try {
         //const parkingSpace = await ParkingSpace.create({ ...body, ownerId: req.user.id })
+       console.log(parkingSpace.address.area)
+       const response=await  axios.get(`https://api.geoapify.com/v1/geocode/search?text=${parkingSpace.address.area}&apiKey=4a35345ee9054b188d775bb6cef27b7c`)
+       console.log(response.data)
+        parkingSpace.address.coordinates=reverseLatLon(response.data.features[0].geometry.coordinates)
          await parkingSpace.save()
         // const slots = []
         // for (let i = 0; i < Number(parkingSpace.capacity); i++) {
