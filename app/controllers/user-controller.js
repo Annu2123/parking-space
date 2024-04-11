@@ -174,4 +174,23 @@ usersCntrl.remove=async(req,res)=>{
         res.status(401).json({error:"internal server errro"})
     }
 }
+
+//email verification
+usersCntrl.verifyEmail = async (req, res) => {
+    // const errors = validationResult(req)
+    // if (!errors.isEmpty()) {
+    //     res.status(401).json({ errors: errors.array() })
+    // }
+    const { email, otp } = req.body
+    try {
+        const user = await User.findOneAndUpdate({ email: email, otp: otp }, { $set: { isverified: true } }, { new: true })
+        if (!user) { 
+            return res.status(401).json("email and otp is not currect")
+        }
+        res.status(201).json("email verified")
+    } catch (err) {
+        console.error("Error verifying email:", err);
+        res.status(500).json({ error: "Internal Server Error" })
+    }
+}
 module.exports=usersCntrl

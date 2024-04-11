@@ -23,10 +23,14 @@ const bookingParkingSpaceSchema=new Schema({
     startDateTime:Date,
     endDateTime:Date,
     amount:Number,
-    // paymentStatus:{
-    //     type:String,
-    //     default:"pending"
-    // }
+    paymentStatus:{
+        type:String,
+        default:"pending"
+    },
+    approveStatus:{
+        type:Boolean,
+        default:false
+    }
 },{timestamps:true})
 const Booking=model("Booking",bookingParkingSpaceSchema)
 module.exports=Booking

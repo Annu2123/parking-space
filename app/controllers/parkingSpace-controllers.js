@@ -6,20 +6,24 @@ const ParkingSpace = require("../models/parkingSpace-model")
 const parkingSpaceCntrl = {}
 
 
-parkingSpaceCntrl.register = async (req, res) => {
+parkingSpaceCntrl.register = async (req,res) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() })
+        return res.status(400).json({errors: errors.array() })
     }
     // const body=req.body
     // const parkingSpace=new ParkingSpace(body)
-
-    const body = _.pick(req.body, ["title", "image", "amenities", "spaceTypes", "propertyType", "description", "coordinates"])
+    
+    const body = _.pick(req.body,["title","image","amenities","spaceTypes","propertyType","description","address"])
+    const parkingSpace=new ParkingSpace(body)
+    const image=req.file
+    parkingSpace.image=image.filename
+    parkingSpace.ownerId=req.user.id
     try {
-        const parkingSpace = await ParkingSpace.create({ ...body, ownerId: req.user.id })
-
+        //const parkingSpace = await ParkingSpace.create({ ...body, ownerId: req.user.id })
+         await parkingSpace.save()
         // const slots = []
-        // for (let i = 0; i < Number( parkingSpace.capacity); i++) {
+        // for (let i = 0; i < Number(parkingSpace.capacity); i++) {
         //     const slot = new Slot({
         //        parkingSpaceId:parkingSpace._id,
         //        start_time:null,
@@ -32,6 +36,7 @@ parkingSpaceCntrl.register = async (req, res) => {
         res.status(201).json(parkingSpace)
     } catch (err) {
         res.status(400).json({ error: "internal server error" })
+        console.log(err.message)
     }
 }
 
@@ -106,7 +111,7 @@ parkingSpaceCntrl.findByLatAndLog = async (req, res) => {
                 latitude: parseFloat(centerCoordinates.latitude),
                 longitude: parseFloat(centerCoordinates.longitude)
             }
-            return isPointWithinRadius(transformToObj(ele.coordinates), r, radius*1000)
+            return isPointWithinRadius(transformToObj(ele.address.coordinates), r, radius*1000)
         })
         res.json(filteredParkingSpace)
     } catch (err) {

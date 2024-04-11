@@ -5,6 +5,7 @@ const multer = require('multer')
 const { checkSchema } = require('express-validator')
 const configDb = require('./config/db')
 // app.use('/uploads',express.static('uploads'))
+
 configDb()
 const {
     userRegisterSchemaValidation,
@@ -30,30 +31,31 @@ const port = 3045
 app.use(cors())
 app.use(express.json())
 
-//  const storage=multer.diskStorage(
-//    {
-//        destination:function (req,file,cb){
-//            return cb(null,"./uploads")
-//        },
-//        filename:function(req,file,cb){
-//            return cb(null,`${Date.now()}-${file.originalname}`)
-//        }
-//    }
-// )
-// const upload=multer({storage})
+app.use('/uploads',express.static('uploads'))
+ const storage=multer.diskStorage(
+   {
+       destination:function (req,file,cb){
+           return cb(null,"./uploads")
+       },
+       filename:function(req,file,cb){
+           return cb(null,`${Date.now()}-${file.originalname}`)
+       }
+   }
+)
+const upload=multer({storage})
+
 
 //user Apis
 app.post('/api/users/register', checkSchema(userRegisterSchemaValidation), usersCntrl.register)
-app.put("/api/verify/emails", checkSchema(userOtpValidation), usersCntrl.verifyEmail)//verify email
-app.post('/api/users/login', checkSchema(usersLoginSchema), usersCntrl.login)//user login
+app.put("/api/verify/emails", checkSchema(userOtpValidation), usersCntrl.verifyEmail)
+app.post('/api/users/login', checkSchema(usersLoginSchema), usersCntrl.login)
 app.put("/API/update/password", authenticateUser, checkSchema(usersupdatePasswordValidationSchema), usersCntrl.updatePassword)// updatePassword
-app.get('/api/users/accounts', authenticateUser, usersCntrl.accounts)//listing accounts
-app.post("/api/users/forgotpassword", checkSchema(usersForgotPasswordSchema), usersCntrl.forgotPassword)//users forgotpassword
-app.put("/api/users/setforgotpassword", checkSchema(usersSetPasswordSchema), usersCntrl.setFogotPassword)//set forgotpassword
-app.delete('/api/users/:id', authenticateUser, authorizeUser(["admin"]), usersCntrl.remove)
+app.get('/api/users/accounts', authenticateUser, usersCntrl.accounts)
+app.post("/api/users/forgotpassword", checkSchema(usersForgotPasswordSchema), usersCntrl.forgotPassword)
+app.put("/api/users/setforgotpassword", checkSchema(usersSetPasswordSchema), usersCntrl.setFogotPassword)
 
 //parking space apis
-app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]), checkSchema(ParkingSpaceSchemaValidation), parkingSpaceCntrl.register)
+app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]),upload.single('image'),parkingSpaceCntrl.register)
 app.get('/api/parkingSpace/my', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.mySpace)
 app.delete('/api/parkingSpace/:id', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.remove)
 app.get('/api/parkingSpace', parkingSpaceCntrl.list)
