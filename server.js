@@ -5,6 +5,7 @@ const multer = require('multer')
 const { checkSchema } = require('express-validator')
 const configDb = require('./config/db')
 // app.use('/uploads',express.static('uploads'))
+
 configDb()
 const {
     userRegisterSchemaValidation,
@@ -30,6 +31,7 @@ const port = 3045
 app.use(cors())
 app.use(express.json())
 
+app.use('/uploads',express.static('uploads'))
  const storage=multer.diskStorage(
    {
        destination:function (req,file,cb){
@@ -41,7 +43,7 @@ app.use(express.json())
    }
 )
 const upload=multer({storage})
-app.use('/uploads',express.static('uploads'))
+
 
 //user Apis
 app.post('/api/users/register', checkSchema(userRegisterSchemaValidation), usersCntrl.register)
@@ -53,7 +55,7 @@ app.post("/api/users/forgotpassword", checkSchema(usersForgotPasswordSchema), us
 app.put("/api/users/setforgotpassword", checkSchema(usersSetPasswordSchema), usersCntrl.setFogotPassword)
 
 //parking space apis
-app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]), checkSchema(ParkingSpaceSchemaValidation), parkingSpaceCntrl.register)
+app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]),upload.single('image'),parkingSpaceCntrl.register)
 app.get('/api/parkingSpace/my', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.mySpace)
 app.delete('/api/parkingSpace/:id', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.remove)
 app.get('/api/parkingSpace', parkingSpaceCntrl.list)
