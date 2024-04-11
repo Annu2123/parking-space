@@ -1,5 +1,6 @@
 const ParkingSpaceSchemaValidation={
     title:{
+        in:['form-data'],
         notEmpty:{
             errorMessage:"title is require"
         },
@@ -18,6 +19,7 @@ const ParkingSpaceSchemaValidation={
     //     notEmpty:"image is require"
     // },
     spaceTypes:{
+        in:['form-data'],
        custom:{
         options:function (value){
            
@@ -55,6 +57,7 @@ const ParkingSpaceSchemaValidation={
         // }
     },
     amenities:{
+        in:['form-data'],
         notEmpty:{
             errorMessage:"amenities is require"
         },
@@ -63,6 +66,7 @@ const ParkingSpaceSchemaValidation={
         }
     },
     address:{
+        in:['form-data'],
         notEmpty:{
             errorMessage:"address is require"
         },
@@ -86,24 +90,25 @@ const ParkingSpaceSchemaValidation={
                 if(typeof value.state !="string"){
                     throw new Error("state must be a string")
                 }
-                if(!Array.isArray(value.coordinates)){
-                    throw new Error("coordinates should be a array")
-                }
-                if(value.coordinates.length !=2){
-                    throw new Error("coordinates must have only 2 values")
-                }
-                if(typeof value.coordinates[0] != 'number'){
-                    throw new Error("coordinates only have number type value")
-                }
-                if( typeof value.coordinates[1] !='number'){
-                    throw new Error("coordinates only have number type value")
-                }
+                // if(!Array.isArray(value.coordinates)){
+                //     throw new Error("coordinates should be a array")
+                // }
+                // if(value.coordinates.length !=2){
+                //     throw new Error("coordinates must have only 2 values")
+                // }
+                // if(typeof value.coordinates[0] != 'number'){
+                //     throw new Error("coordinates only have number type value")
+                // }
+                // if( typeof value.coordinates[1] !='number'){
+                //     throw new Error("coordinates only have number type value")
+                // }
                 return true
             }
         }
     },
    
     propertyType:{
+         in:['form-data'],
         notEmpty:{
             errorMessage:" propertytype is require"
         },

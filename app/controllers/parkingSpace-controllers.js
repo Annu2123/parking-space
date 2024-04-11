@@ -36,6 +36,7 @@ parkingSpaceCntrl.register = async (req,res) => {
         res.status(201).json(parkingSpace)
     } catch (err) {
         res.status(400).json({ error: "internal server error" })
+        console.log(err.message)
     }
 }
 

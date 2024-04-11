@@ -13,7 +13,7 @@ const parkingSpaceRegisterSchema = new Schema({
         area: String,
         city: String,
         state: String,
-        coordinates: [Number],
+        coordinates:[Number],
     } ,  
    propertyType: String,
     activeStatus: {
