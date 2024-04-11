@@ -129,7 +129,7 @@ const usersLoginSchema={
         isStrongPassword:{
             options:[{ minLowercase: 1,
               minUppercase: 1,minNumbers:2,minSymbols:1}],
-              errorMessage:"password must contain 2 uppercase 2 lower case 2 min numbersand atleast one symbol"
+              errorMessage:"password must contain 1 uppercase 1 lower case 2 min numbersand atleast one symbol"
           },
           isLength:{
               options:[{min:5,max:128}],

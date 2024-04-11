@@ -7,7 +7,7 @@ const {validationResult}=require('express-validator')
 
 //otp functiion to send otp
 const generateOtp=()=>{
-    const otp=Math.round(Math.random()*10000)
+    const otp=Math.round(Math.random()*9000)
     console.log(otp)
     return otp
     
