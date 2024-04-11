@@ -27,7 +27,7 @@ parkingSpaceCntrl.register = async (req,res) => {
         //const parkingSpace = await ParkingSpace.create({ ...body, ownerId: req.user.id })
        console.log(parkingSpace.address.area)
        const response=await  axios.get(`https://api.geoapify.com/v1/geocode/search?text=${parkingSpace.address.area}&apiKey=4a35345ee9054b188d775bb6cef27b7c`)
-       console.log(response.data)
+       
         parkingSpace.address.coordinates=reverseLatLon(response.data.features[0].geometry.coordinates)
          await parkingSpace.save()
         // const slots = []
