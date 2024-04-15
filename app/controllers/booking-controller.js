@@ -2,6 +2,7 @@ const Booking = require('../models/booking-model')
 const ParkingSpace = require('../models/parkingSpace-model')
 const moment = require('moment')
 const {validationResult}=require('express-validator')
+const User = require('../models/users-model')
 
 const bookingCntrl = {}
 function momentConvertion(date) {
@@ -23,7 +24,12 @@ bookingCntrl.booking = async (req, res) => {
     booking.customerId = req.user.id
 
     try {
-        await booking.save()
+        const parkingSpace=await ParkingSpace.findById(parkingSpaceId)
+        const owner=await User.findById(parkingSpace.ownerId)
+        console.log(parkingSpace)
+        console.log(owner)
+        console.log(parkingSpace.ownerId)
+        await booking.save() 
         res.status(200).json(booking)
     } catch (err) {
         console.log(err)
@@ -51,17 +57,17 @@ bookingCntrl.findSpace = async (req, res) => {
     // const momentEndDateTime = moment('2034-04-09 16:30','YYYY-MM-DD HH:mm').utc();
     const momentStartDateTime = moment(startDateTime,'YYYY-MM-DD HH:mm').utc();
     const momentEndDateTime = moment(endDateTime,'YYYY-MM-DD HH:mm').utc();
-    console.log(momentStartDateTime)
-    console.log(momentEndDateTime)
-    console.log(momentStartDateTime.toDate())
-    console.log(momentEndDateTime.toDate())
+    // console.log(momentStartDateTime)
+    // console.log(momentEndDateTime)
+    // console.log(momentStartDateTime.toDate())
+    // console.log(momentEndDateTime.toDate())
 
     try {
          const parkingSpace=await ParkingSpace.findById(parkingSpaceId)
          if(!parkingSpace){
             return res.status(404).json({error:"parking space is not found"})
          }
-         console.log(parkingSpace)
+        //  console.log(parkingSpace)
         const booking = await Booking.find({parkingSpaceId:parkingSpaceId,spaceTypesId:spaceTypeId,
             $or: [
                 {
@@ -84,13 +90,20 @@ bookingCntrl.findSpace = async (req, res) => {
                 }
             ]
         })
+        const spaceType=parkingSpace.spaceTypes.find((ele)=>{
+            if(ele._id == spaceTypeId){
+                return ele
+            }
+        })
+        console.log(spaceType)
         console.log(booking.length)
-        if(parkingSpace.spaceTypes[1]._id == spaceTypeId){
-            console.log("nn")
-        }else{
-            console.log("yes")
-        }
-        res.json(booking)
+        const numberOfBooking=booking.length
+        const availableSpace= spaceType.capacity - numberOfBooking
+        console.log(availableSpace)
+        if(availableSpace ==0){
+            return res.status(404).json({error:"Space is not available"})
+        }   
+        res.json(availableSpace)
     } catch (err) {
         console.log(err)
         res.json({ error: "internal server error" })
