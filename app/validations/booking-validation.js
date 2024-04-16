@@ -32,8 +32,9 @@ const bookingParkingSpaceValidation={
             errorMessage:"start time is require"
         },
         // isDate:{
-        //     errorMessage:"startDateTime should be date"
-        // },
+        //     format: ['YYYY-MM-DDTHH:MM:SS'],
+        //     errorMessage:"start DateTime must be a date type"
+        //  },
         custom:{
             options:function (value){
                 if(new Date(value) > new Date()){
@@ -46,12 +47,13 @@ const bookingParkingSpaceValidation={
         }
     },
     endDateTime:{
-     notEmpty:{
-        errorMessage:"end date is require "
-     },
-    //  isDate:{
-    //     errorMessage:"endDateTime must be a date type"
-    //  },
+        notEmpty:{
+            errorMessage:"send  time is require"
+        },
+        // isDate:{
+        //     format: ['YYYY-MM-DDTHH:mm:ss'],
+        //     errorMessage:"endDateTime must be a date type"
+        //  },
      custom:{
         options:function(value, {req}){
             if(new Date(value)> new Date(req.body.startDateTime)){
@@ -68,15 +70,15 @@ const bookingParkingSpaceValidation={
     //     },
     //      isIn:[["pending","completed","cancel"]],
     //      errorMessage:"chhose only from a option",
-    //  amount:{
-    //     notEmpty:{
-    //         errorMessage:"amount is require"
-    //     },
-    //     isNumeric:{
-    //         errorMessage:"amount should be number"
-    //     }
-    //  }
-   // }
+    // },
+     amount:{
+        notEmpty:{
+            errorMessage:"amount is require"
+        },
+        isNumeric:{
+            errorMessage:"amount should be number"
+        }
+     }
         
 }
 module.exports={bookingParkingSpaceValidation}

@@ -16,6 +16,7 @@ const {
 const { ParkingSpaceSchemaValidation, parkingSpaceApproveValidarion } = require('./app/validations/parkingSpace-validation')
 const { reviesValidation } = require('./app/validations/revies-validation')
 const vehicleValidationSchema = require("./app/validations/vehicle-validation")
+const {bookingParkingSpaceValidation}=require('./app/validations/booking-validation')
 
 const { authenticateUser, authorizeUser } = require('./app/middlewares/auth')
 
@@ -50,7 +51,7 @@ app.post("/api/users/forgotpassword", checkSchema(usersForgotPasswordSchema), us
 app.put("/api/users/setforgotpassword", checkSchema(usersSetPasswordSchema), usersCntrl.setFogotPassword)
 
 //parking space apis
-app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]),upload.single('image'),parkingSpaceCntrl.register)
+app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]),checkSchema( ParkingSpaceSchemaValidation),upload.single('image'),parkingSpaceCntrl.register)
 app.get('/api/parkingSpace/my', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.mySpace)
 app.delete('/api/parkingSpace/:id', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.remove)
 app.get('/api/parkingSpace', parkingSpaceCntrl.list)
@@ -76,9 +77,13 @@ app.put("/api/reviews/update/:id", authenticateUser, authorizeUser(["customer"])
 
 
 //booking of parking space
-app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId', authenticateUser, authorizeUser(["customer"]), bookingCntrl.booking)
+app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId', authenticateUser, authorizeUser(["customer"]),checkSchema(bookingParkingSpaceValidation), bookingCntrl.booking)
 app.get('/api/booking/my/:id', bookingCntrl.list)
+
 app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookingCntrl.MyBookings)
+
+app.put('/api/approve/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
+
 
 
 app.listen(port, () => {
