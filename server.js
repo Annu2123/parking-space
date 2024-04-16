@@ -84,6 +84,7 @@ app.put("/api/reviews/update/:id", authenticateUser, authorizeUser(["customer"])
 //booking of parking space
 app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId', authenticateUser, authorizeUser(["customer"]),checkSchema(bookingParkingSpaceValidation), bookingCntrl.booking)
 app.get('/api/booking/my/:id', bookingCntrl.list)
+app.put('/api/approve/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
 
 
 app.listen(port, () => {
