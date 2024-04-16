@@ -111,4 +111,13 @@ bookingCntrl.myParkingSpace=async(req,res)=>{
         res.status(500).json({error:"internal server error"})
        }
 }
+bookingCntrl.MyBookings=async(req,res)=>{
+    try{
+        const response=await Booking.find({customerId:req.user.id}).populate("parkingSpaceId").populate("vehicleId"," vehicleName")
+        res.status(201).json(response)
+    }catch(err){
+        console.log(err)
+        res.status(501).json({error:"server error"})
+    }
+}
 module.exports = bookingCntrl

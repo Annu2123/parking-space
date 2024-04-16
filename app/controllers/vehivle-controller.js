@@ -10,7 +10,10 @@ vehicleCtlr.create=async(req,res)=>{
     }
     const body=req.body
     const vehicle=new Vehicle(body)
-      vehicle.customerId=req.user.id
+    console.log(req.files,'f')
+    const documents=req.file
+    vehicle.documents=documents.filename
+     vehicle.customerId=req.user.id
     try{
         const response=await vehicle.save()
         res.status(201).json(response)

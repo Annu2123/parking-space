@@ -4,8 +4,6 @@ const cors = require('cors')
 const multer = require('multer')
 const { checkSchema } = require('express-validator')
 const configDb = require('./config/db')
-// app.use('/uploads',express.static('uploads'))
-
 configDb()
 const {
     userRegisterSchemaValidation,
@@ -30,7 +28,6 @@ const app = express()
 const port = 3045
 app.use(cors())
 app.use(express.json())
-
 app.use('/uploads',express.static('uploads'))
  const storage=multer.diskStorage(
    {
@@ -43,8 +40,6 @@ app.use('/uploads',express.static('uploads'))
    }
 )
 const upload=multer({storage})
-
-
 //user Apis
 app.post('/api/users/register', checkSchema(userRegisterSchemaValidation), usersCntrl.register)
 app.put("/api/verify/emails", checkSchema(userOtpValidation), usersCntrl.verifyEmail)
@@ -68,7 +63,7 @@ app.get('/api/parkingSpace/radius', parkingSpaceCntrl.findByLatAndLog)
 app.get('/api/parkingSpace/:parkingSpaceId/spaceType/:spaceTypeId', bookingCntrl.findSpace)
 
 //vehicle api's
-app.post("/API/vehicle/register", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema), vehicleCtlr.create)//vehicle create
+app.post("/API/vehicle/register", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema),upload.single('documents'), vehicleCtlr.create)//vehicle create
 app.get("/API/vehicles/list", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.list)//vehicles list
 app.put("/API/vehicles/update/:id", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema), vehicleCtlr.update)//vehicles update
 app.delete("/API/vehicles/remove/:id", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.remove)//vehicles remove
@@ -83,6 +78,7 @@ app.put("/api/reviews/update/:id", authenticateUser, authorizeUser(["customer"])
 //booking of parking space
 app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId', authenticateUser, authorizeUser(["customer"]), bookingCntrl.booking)
 app.get('/api/booking/my/:id', bookingCntrl.list)
+app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookingCntrl.MyBookings)
 
 
 app.listen(port, () => {
