@@ -24,11 +24,8 @@ bookingCntrl.booking = async (req, res) => {
     booking.customerId = req.user.id
 
     try {
-        const parkingSpace=await ParkingSpace.findById(parkingSpaceId)
-        const owner=await User.findById(parkingSpace.ownerId)
-        console.log(parkingSpace)
-        console.log(owner)
-        console.log(parkingSpace.ownerId)
+        const parkingSpace=await ParkingSpace.findById(parkingSpaceId).populate('ownerId')
+        // console.log(parkingSpace.ownerId.email)
         await booking.save() 
         res.status(200).json(booking)
     } catch (err) {
@@ -123,5 +120,15 @@ bookingCntrl.myParkingSpace=async(req,res)=>{
        }catch(err){
         res.status(500).json({error:"internal server error"})
        }
+}
+bookingCntrl.accept=async(req,res)=>{
+    const id=req.params.id
+    try{
+        const booking=await Booking.findByIdAndUpdate(id,{$set:{ approveStatus:true}},{new:true})
+        res.status(201).json(booking)
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+        console.log(err)
+    }
 }
 module.exports = bookingCntrl
