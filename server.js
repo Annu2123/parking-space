@@ -57,6 +57,7 @@ app.get('/api/parkingSpace/my', authenticateUser, authorizeUser(["owner"]), park
 app.delete('/api/parkingSpace/:id', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.remove)
 app.get('/api/parkingSpace', parkingSpaceCntrl.list)
 app.put('/api/parkingSpace/approve/:id', authenticateUser, authorizeUser(['admin']), checkSchema(parkingSpaceApproveValidarion), parkingSpaceCntrl.approve)
+app.put('/api/parkingSpace/update/:id',authenticateUser,authorizeUser(["owner"]),parkingSpaceCntrl.update)
 
 //get all parking space within radius
 app.get('/api/parkingSpace/radius', parkingSpaceCntrl.findByLatAndLog)
@@ -69,6 +70,7 @@ app.post("/API/vehicle/register", authenticateUser, authorizeUser(["customer"]),
 app.get("/API/vehicles/list", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.list)//vehicles list
 app.put("/API/vehicles/update/:id", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema), vehicleCtlr.update)//vehicles update
 app.delete("/API/vehicles/remove/:id", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.remove)//vehicles remove
+
 // revies api's
 app.post("/api/booking/:bookingId/parkingSpace/:parkingSpaceId", authenticateUser, authorizeUser(["customer"]), checkSchema(reviesValidation), reviewsController.create)//create review
 app.get("/api/reviews/list", authenticateUser, reviewsController.list)//list of all reviews
@@ -76,14 +78,14 @@ app.get("/api/reviews/space/:id", authenticateUser, authorizeUser(["owner"]), re
 app.delete("/api/reviews/remove/:id", authenticateUser, authorizeUser(["customer"]), reviewsController.remove)//remove review
 app.put("/api/reviews/update/:id", authenticateUser, authorizeUser(["customer"]), reviewsController.update)
 
-
+app.get('/api/myParkingSpace/booking',authenticateUser,authorizeUser(["owner"]),bookingCntrl.myParkingSpace)
 //booking of parking space
 app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId', authenticateUser, authorizeUser(["customer"]),checkSchema(bookingParkingSpaceValidation), bookingCntrl.booking)
 app.get('/api/booking/my/:id', bookingCntrl.list)
 
 app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookingCntrl.MyBookings)
 
-app.put('/api/approve/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
+app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
 
 
 app.post('/api/create-checkout-session',paymentsCntrl.pay)

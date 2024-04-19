@@ -48,7 +48,28 @@ parkingSpaceCntrl.register = async (req,res) => {
     }
 }
 
-
+parkingSpaceCntrl.update=async(req,res)=>{
+    const id=req.params.id
+    // const errors=validationResult(req)
+    // if(!errors.isEmpty()){
+    //      return res.status(400).json({errors:errors.array()})
+    // }
+    try{
+        const parkingSpace=await ParkingSpace.findById({_id:id,ownerId:req.user.id})
+        if(!parkingSpace){
+            return res.status(404).json({error:"parkingSpace not found for you"})
+        }
+        const body=_.pick(req.body,["title","amenities","spaceTypes","propertyType","description","address"])
+        const spaceBody=new ParkingSpace(body)
+        spaceBody.ownerId=req.user.id
+        const response=await  axios.get(`https://api.geoapify.com/v1/geocode/search?text=${parkingSpace.address.area}&apiKey=4a35345ee9054b188d775bb6cef27b7c`)  
+        spaceBody.address.coordinates=reverseLatLon(response.data.features[0].geometry.coordinates)
+        const updatedSpace=await ParkingSpace.findOneAndUpdate({_id:id},{new:true})
+        res.status(202).json(updatedSpace)
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
 parkingSpaceCntrl.mySpace = async (req, res) => {
     try {
         const parkingSpace = await ParkingSpace.find({ ownerId: req.user.id })

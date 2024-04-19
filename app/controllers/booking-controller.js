@@ -26,12 +26,13 @@ bookingCntrl.booking = async (req, res) => {
     try {
         const parkingSpace=await ParkingSpace.findById(parkingSpaceId).populate('ownerId')
         await booking.save() 
+        const bookings=await Booking.findOne({_id:booking._id}).populate("parkingSpaceId").populate("vehicleId","vehicleName")
         sendEmail({
         email:parkingSpace.ownerId.email,
         text:`${parkingSpace.ownerId.name} your parking space is booked customer is waiting for approval.`,
         subject:"pickparking customer approval status"
         })
-        res.status(200).json(booking)
+        res.status(200).json(bookings)
     } catch (err) {
         console.log(err)
         res.status(401).json({ error: "internal server error" })
@@ -114,11 +115,12 @@ bookingCntrl.findSpace = async (req, res) => {
 bookingCntrl.myParkingSpace=async(req,res)=>{
        try{
         const id=req.user.id
-        const parkingSpace=await ParkingSpace.findById(id)
+        const parkingSpace=await ParkingSpace.findOne({ownerId:id})
+        
         if(!parkingSpace){
             return res.status(404).json({error:"you dont have listed parking space"})
         }
-        const bookings=await Booking.find({parkingSpaceId:parkingSpace._id})
+        const bookings=await Booking.find({parkingSpaceId:parkingSpace._id}).populate('customerId').populate('vehicleId')
         res.status(201).json(bookings)
 
        }catch(err){
@@ -139,6 +141,7 @@ bookingCntrl.MyBookings=async(req,res)=>{
 bookingCntrl.accept=async(req,res)=>{
     const id=req.params.id
     try{
+
         const booking=await Booking.findByIdAndUpdate(id,{$set:{ approveStatus:true}},{new:true}).populate({ path: 'customerId', select: 'email' }).populate({path: 'parkingSpaceId', select: 'title' })
         
         const paymentLink = `http://localhost:3000/makePayment/${booking._id}/${booking.amount}`;
