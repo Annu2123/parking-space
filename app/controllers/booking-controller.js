@@ -3,7 +3,7 @@ const ParkingSpace = require('../models/parkingSpace-model')
 const moment = require('moment')
 const {validationResult}=require('express-validator')
 const User = require('../models/users-model')
-
+const sendEmail=require("../utilities/node-mailer/email")
 const bookingCntrl = {}
 function momentConvertion(date) {
     return moment(date).format("YYYY-MM-DD HH:mm:ss")
@@ -25,9 +25,13 @@ bookingCntrl.booking = async (req, res) => {
 
     try {
         const parkingSpace=await ParkingSpace.findById(parkingSpaceId).populate('ownerId')
-        // console.log(parkingSpace.ownerId.email)
-        await booking.save()
+        await booking.save() 
         const bookings=await Booking.findOne({_id:booking._id}).populate("parkingSpaceId").populate("vehicleId","vehicleName")
+        sendEmail({
+        email:parkingSpace.ownerId.email,
+        text:`${parkingSpace.ownerId.name} your parking space is booked customer is waiting for approval.`,
+        subject:"pickparking customer approval status"
+        })
         res.status(200).json(bookings)
     } catch (err) {
         console.log(err)
@@ -126,20 +130,32 @@ bookingCntrl.myParkingSpace=async(req,res)=>{
 
 bookingCntrl.MyBookings=async(req,res)=>{
     try{
-        const response=await Booking.find({customerId:req.user.id}).populate("parkingSpaceId").populate("vehicleId"," vehicleName")
+        const response=await Booking.find({customerId:req.user.id}).populate("parkingSpaceId").populate("vehicleId","vehicleName")
         res.status(201).json(response)
     }catch(err){
         console.log(err)
         res.status(501).json({error:"server error"})
     }
-
 }
 
 bookingCntrl.accept=async(req,res)=>{
     const id=req.params.id
     try{
-        const booking=await Booking.findByIdAndUpdate(id,{$set:{ approveStatus:true}},{new:true}).populate('vehicleId')
+
+        const booking=await Booking.findByIdAndUpdate(id,{$set:{ approveStatus:true}},{new:true}).populate({ path: 'customerId', select: 'email' }).populate({path: 'parkingSpaceId', select: 'title' })
+        
+        const paymentLink = `http://localhost:3000/makePayment/${booking._id}/${booking.amount}`;
+        const emailBody = `
+            Your ${booking.parkingSpaceId.title} parking slot is confirmed by the owner. Make payment by clicking the following link: <a href="${paymentLink}">Pay Now</a>. 
+            Please note: This link is confidential and intended only for your use. Please do not share it with anyone.
+        `;
+        sendEmail({
+            email:booking.customerId.email,
+        text:emailBody,
+        subject:"pickparking slot approval status"
+        })
         res.status(201).json(booking)
+
     }catch(err){
         res.status(500).json({error:"internal server error"})
         console.log(err)

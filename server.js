@@ -25,6 +25,7 @@ const parkingSpaceCntrl = require('./app/controllers/parkingSpace-controllers')
 const reviewsController = require('./app/controllers/revies-controller')
 const vehicleCtlr = require("./app/controllers/vehivle-controller")
 const bookingCntrl = require('./app/controllers/booking-controller')
+const paymentsCntrl=require('./app/controllers/payment-controller')
 const app = express()
 const port = 3045
 app.use(cors())
@@ -87,7 +88,7 @@ app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookin
 app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
 
 
-
+app.post('/api/create-checkout-session',paymentsCntrl.pay)
 app.listen(port, () => {
     console.log("server is running in " + port)
 })
