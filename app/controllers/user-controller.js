@@ -85,6 +85,15 @@ usersCntrl.login=async(req,res)=>{
         res.status(400).json({error:"internal server error"})
     }
 }
+//my account
+usersCntrl.my=async(req,res)=>{
+    try{
+        const user=await User.findOne({_id:req.user.id})
+        res.status(200).json(user)
+    }catch(err){
+        res.status(401).json({error:"internal server error"})
+    }
+}
 //updating password
 usersCntrl.updatePassword=async(req,res)=>{
     const errors=validationResult(req)
