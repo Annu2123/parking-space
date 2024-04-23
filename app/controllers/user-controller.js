@@ -82,6 +82,7 @@ usersCntrl.login=async(req,res)=>{
        const token=jwt.sign(tokenData,process.env.SECRET_JWT,{expiresIn:"12d"})
        res.status(200).json({token:token})
     }catch(err){
+        console.log(err)
         res.status(400).json({error:"internal server error"})
     }
 }
