@@ -15,7 +15,7 @@ const sendEmail=async(data)=>{
         from:process.env.email,
         to:data.email,
         subject:data.subject,
-        text:data.text
+        html:data.text
     }
     try{
         await transport.sendMail(mailOptions)

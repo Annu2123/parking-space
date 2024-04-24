@@ -68,7 +68,8 @@ app.get('/api/parkingSpace/:parkingSpaceId/spaceType/:spaceTypeId', bookingCntrl
 //vehicle api's
 app.post("/API/vehicle/register", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema),upload.single('documents'), vehicleCtlr.create)//vehicle create
 app.get("/API/vehicles/list", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.list)//vehicles list
-app.put("/API/vehicles/update/:id", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema), vehicleCtlr.update)//vehicles update
+app.put("/API/vehicles/update/:id", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema), upload.single('documents'),vehicleCtlr.update)//vehicles update
+app.put("/api/vehicle/approval/:id",authenticateUser,authorizeUser(['admin']),vehicleCtlr.approve)
 app.delete("/API/vehicles/remove/:id", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.remove)//vehicles remove
 
 // revies api's
@@ -88,7 +89,7 @@ app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookin
 app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
 
 
-app.post('/api/create-checkout-session',paymentsCntrl.pay)
+app.post('/api/create-checkout-session/:id/:amount',paymentsCntrl.pay)
 app.listen(port, () => {
     console.log("server is running in " + port)
 })

@@ -50,7 +50,6 @@ usersCntrl.verifyEmail = async (req, res) => {
     const { email, otp } = req.body
     try {
         const user = await User.findOneAndUpdate({ email: email, otp: otp }, { $set: { isverified: true } }, { new: true })
-        console.log(user)
         if (!user) {
             return res.status(401).json("email and otp is not currect")
         }

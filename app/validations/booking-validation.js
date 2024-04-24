@@ -37,7 +37,7 @@ const bookingParkingSpaceValidation={
         //  },
         custom:{
             options:function (value){
-                if(new Date(value) > new Date()){
+                if(new Date(value)>= new Date()){
                     return true
                 }else{
                     throw new Error(" date should be greater than todays date")

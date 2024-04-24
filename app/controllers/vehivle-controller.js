@@ -32,7 +32,6 @@ vehicleCtlr.list=async(req,res)=>{
 }
 vehicleCtlr.remove=async(req,res)=>{
     const id=req.params.id
-    console.log(id)
     try{
         const response=await Vehicle.findOneAndDelete({customerId:req.user.id,_id:id})
         res.status(201).json(response)
@@ -41,15 +40,27 @@ vehicleCtlr.remove=async(req,res)=>{
     }
 }
 vehicleCtlr.update=async(req,res)=>{
-    console.log(req.body,'body')
+    console.log(req.body,'req')
     const errors=validationResult(req)
     if(!errors.isEmpty()){
         return res.status(401).json({errors:errors.array()})
     }
     const id=req.params.id
-    const body=_.pick(req.body,["name","vehicleType","vehicalNumber","documents"])
+    console.log(id,req.user.id,'ids')
+    const body=_.pick(req.body,["vehicleName","vehicleType","vehicalNumber"])
+    console.log(body,'body')
     try{
-        const response=await Vehicle.findOneAndUpdate({userId:req.user.id,_id:id},body,{new:true})
+        const response=await Vehicle.findOneAndUpdate({customerId:req.user.id,_id:id},body,{new:true})
+        res.status(201).json(response)
+    }catch(err){
+        console.log(err)
+        res.status(401).json({error:"internal server error"})
+    }
+}
+vehicleCtlr.approve=async(req,res)=>{
+    const {id}=req
+    try{
+        const response=await Vehicle.findOneAndUpdate(id,{$set:{isVerified:true}},{new:true})
         res.status(201).json(response)
     }catch(err){
         console.log(err)

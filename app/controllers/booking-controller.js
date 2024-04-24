@@ -143,15 +143,10 @@ bookingCntrl.accept=async(req,res)=>{
     try{
 
         const booking=await Booking.findByIdAndUpdate(id,{$set:{ approveStatus:true}},{new:true}).populate({ path: 'customerId', select: 'email' }).populate({path: 'parkingSpaceId', select: 'title' })
-        
-        const paymentLink = `http://localhost:3000/makePayment/${booking._id}/${booking.amount}`;
-        const emailBody = `
-            Your ${booking.parkingSpaceId.title} parking slot is confirmed by the owner. Make payment by clicking the following link: <a href="${paymentLink}">Pay Now</a>. 
-            Please note: This link is confidential and intended only for your use. Please do not share it with anyone.
-        `;
+
         sendEmail({
             email:booking.customerId.email,
-        text:emailBody,
+        text:`your booking is approved click heare to make payment <a href=${"http://localhost:3000/bookings"}>click heare</a>`,
         subject:"pickparking slot approval status"
         })
         res.status(201).json(booking)
