@@ -53,16 +53,21 @@ app.put("/api/users/setforgotpassword", checkSchema(usersSetPasswordSchema), use
 
 //parking space apis
 app.post('/api/parkingSpace/Register', authenticateUser, authorizeUser(["owner"]),checkSchema( ParkingSpaceSchemaValidation),upload.single('image'),parkingSpaceCntrl.register)
-app.get('/api/parkingSpace/my', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.mySpace)
+app.get('/api/parkingSpace/my', authenticateUser, authorizeUser(["owner","admin"]), parkingSpaceCntrl.mySpace)
 app.delete('/api/parkingSpace/:id', authenticateUser, authorizeUser(["owner"]), parkingSpaceCntrl.remove)
-app.get('/api/parkingSpace', parkingSpaceCntrl.list)
-app.put('/api/parkingSpace/approve/:id', authenticateUser, authorizeUser(['admin']), checkSchema(parkingSpaceApproveValidarion), parkingSpaceCntrl.approve)
 app.put('/api/parkingSpace/update/:id',authenticateUser,authorizeUser(["owner"]),parkingSpaceCntrl.update)
 
+//admin routes
+app.get('/api/parkingSpace',authenticateUser,authorizeUser(['admin']), parkingSpaceCntrl.list)
+app.get('/api/owner',authenticateUser,authorizeUser(["admin"]),usersCntrl.listOwner)
+app.get('/api/customer',authenticateUser,authorizeUser(["admin"]),usersCntrl.listCustomer)
+app.put('/api/parkingSpace/approve/:id', authenticateUser, authorizeUser(['admin']), checkSchema(parkingSpaceApproveValidarion), parkingSpaceCntrl.approve)
+app.get('/api/parkingSpace/approvalList',authenticateUser,authorizeUser(["admin"]),parkingSpaceCntrl.approvalList)
+app.get('/api/allBooking',authenticateUser,authorizeUser(["admin"]),bookingCntrl.listBookings)
 //get all parking space within radius
 app.get('/api/parkingSpace/radius', parkingSpaceCntrl.findByLatAndLog)
 
-//find avaialble parking space
+//find avaialble parking spacet
 app.get('/api/parkingSpace/:parkingSpaceId/spaceType/:spaceTypeId', bookingCntrl.findSpace)
 
 //vehicle api's

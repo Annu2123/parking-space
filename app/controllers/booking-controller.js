@@ -183,4 +183,12 @@ bookingCntrl.accept = async (req, res) => {
 
     }
 }
+bookingCntrl.listBookings=async(req,res)=>{
+    try{
+        const bookings=await Booking.find({approveStatus:true,paymentStatus:"success"})
+        res.status(202).json(bookings)
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
 module.exports = bookingCntrl

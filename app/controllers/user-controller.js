@@ -203,4 +203,32 @@ usersCntrl.verifyEmail = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" })
     }
 }
+usersCntrl.listCustomer=async(req,res)=>{
+    const adminId=req.user.id
+    try{
+        const admin=await User.findById(adminId)
+        if(!admin){
+            return res.status(404).json({error:"admin not found"})
+        }
+        const customer=await User.find({role:'customer'})
+        res.status(200).json(customer)
+
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
+usersCntrl.listOwner=async(req,res)=>{
+    const adminId=req.user.id
+    try{
+        const admin=await User.findById(adminId)
+        if(!admin){
+            return res.status(404).json({error:"admin not found"})
+        }
+        const owner=await User.find({role:'owner'})
+        res.status(200).json(owner)
+
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
 module.exports=usersCntrl

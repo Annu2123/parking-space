@@ -106,7 +106,7 @@ parkingSpaceCntrl.remove = async (req, res) => {
 
 parkingSpaceCntrl.list = async (req, res) => {
     try {
-        const parkingSpace = await ParkingSpace.find()
+        const parkingSpace = await ParkingSpace.find().populate("ownerId")
         console.log(parkingSpace)
         res.status(201).json(parkingSpace)
     } catch {
@@ -149,6 +149,19 @@ parkingSpaceCntrl.findByLatAndLog = async (req, res) => {
     }
 }
 
+parkingSpaceCntrl.approvalList=async(req,res)=>{
+    const adminId=req.user.id
+    try{
+        const admin=await User.findById(adminId)
+        if(!admin){
+            res.status(404).json({error:"admin details not found"})
+        }
+        const approve=await ParkingSpace.find({approveStatus:false})
+        res.status(202).json(approve)
 
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
 
 module.exports = parkingSpaceCntrl
