@@ -91,6 +91,7 @@ usersCntrl.login=async(req,res)=>{
        const token=jwt.sign(tokenData,process.env.SECRET_JWT,{expiresIn:"12d"})
        res.status(200).json({token:token})
     }catch(err){
+        console.log(err)
         res.status(400).json({error:"internal server error"})
     }
 }
@@ -209,6 +210,45 @@ usersCntrl.verifyEmail = async (req, res) => {
     } catch (err) {
         console.error("Error verifying email:", err);
         res.status(500).json({ error: "Internal Server Error" })
+    }
+}
+usersCntrl.listCustomer=async(req,res)=>{
+    const adminId=req.user.id
+    try{
+        const admin=await User.findById(adminId)
+        if(!admin){
+            return res.status(404).json({error:"admin not found"})
+        }
+        const customer=await User.find({role:'customer'})
+        res.status(200).json(customer)
+
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
+usersCntrl.listOwner=async(req,res)=>{
+    const adminId=req.user.id
+    try{
+        const admin=await User.findById(adminId)
+        if(!admin){
+            return res.status(404).json({error:"admin not found"})
+        }
+        const owner=await User.find({role:'owner'})
+        res.status(200).json(owner)
+
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
+
+//find owners based on query
+usersCntrl.findOwners=async(req,res)=>{
+    const search =req.query.search || ""
+    try{
+        const owners=await User.find({name:{$regex:search,$options:'i'}})
+        res.status(202).json(owners)
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
     }
 }
 module.exports=usersCntrl

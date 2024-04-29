@@ -27,7 +27,7 @@ vehicleCtlr.list=async(req,res)=>{
         res.status(201).json(response)
     }catch(err){
         console.log(err)
-        res.status(401).jsonO({errors:"server errors"})
+        res.status(401).json({errors:"server errors"})
     }
 }
 vehicleCtlr.remove=async(req,res)=>{
