@@ -1,9 +1,13 @@
 require('dotenv').config()
+const http = require('http');
+const socketIo = require('socket.io');
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
 const { checkSchema } = require('express-validator')
 const configDb = require('./config/db')
+const nodeCronCtlr=require("./app/node-cron/bookingStatus")
+nodeCronCtlr()
 configDb()
 const {
     userRegisterSchemaValidation,
@@ -26,8 +30,19 @@ const reviewsController = require('./app/controllers/revies-controller')
 const vehicleCtlr = require("./app/controllers/vehivle-controller")
 const bookingCntrl = require('./app/controllers/booking-controller')
 const paymentsCntrl=require('./app/controllers/payment-controller')
+const spaceCartCtlr=require('./app/controllers/spacecart-controller')
 const app = express()
 const port = 3045
+const server = http.createServer(app);
+   const  io = socketIo(server, {
+        cors: {
+            origin: "*",  
+            methods: ["GET", "POST"]
+        }
+    });
+    io.on('connection', (socket) => {
+        console.log('Client connected:', socket.id);
+    });
 app.use(cors())
 app.use(express.json())
 app.use('/uploads',express.static('uploads'))
@@ -83,13 +98,15 @@ app.get('/api/myParkingSpace/booking',authenticateUser,authorizeUser(["owner"]),
 //booking of parking space
 app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId', authenticateUser, authorizeUser(["customer"]),checkSchema(bookingParkingSpaceValidation), bookingCntrl.booking)
 app.get('/api/booking/my/:id', bookingCntrl.list)
-
 app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookingCntrl.MyBookings)
-
-app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
-
-
+app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),(req,res)=>{
+    bookingCntrl.accept(io,req,res)
+})
 app.post('/api/create-checkout-session/:id/:amount',paymentsCntrl.pay)
-app.listen(port, () => {
+//spcaecart api's
+app.post ("/api/spaceCarts/create/:id",authenticateUser,authorizeUser(["customer"]),spaceCartCtlr.create)
+app.delete("/api/spacecart/delete/:id",authenticateUser,authorizeUser(["customer"]),spaceCartCtlr.remove)
+app.get("/api/spacecart/list",authenticateUser,authorizeUser(["customer"]),spaceCartCtlr.list)
+server.listen(port, () => {
     console.log("server is running in " + port)
 })

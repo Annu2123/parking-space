@@ -4,10 +4,37 @@ const moment = require('moment')
 const {validationResult}=require('express-validator')
 const User = require('../models/users-model')
 const sendEmail=require("../utilities/node-mailer/email")
+const Queue = require('bull');
+// const {emitBookingDeleted}=require("../utilities/node-mailer/socket/socket")
 const bookingCntrl = {}
 function momentConvertion(date) {
     return moment(date).format("YYYY-MM-DD HH:mm:ss")
 }
+// const bookingQueue = new Queue('bookingQueue', {
+//     maxRetriesPerRequest: 50 // Adjust the value as needed
+// });
+// bookingQueue.process(async (job) => {
+//     // Extract data from the job
+//     const { bookingId, paymentDueTime } = job.data;
+//     console.log(bookingId,'id')
+
+//     try {
+//         // Find the booking by ID
+//         const booking = await Booking.findById(bookingId);
+
+//         // Check if the booking exists, is approved, payment is not made, and it's past the payment due time
+//         if (booking && booking.approveStatus && !booking.paidStatus && moment().isSameOrAfter(paymentDueTime)) {
+//             // Delete the booking if conditions are met
+//             await Booking.findByIdAndRemove(bookingId);
+//             console.log(`Booking ${bookingId} removed due to non-payment.`);
+//         }
+//     } catch (error) {
+//         // Log and handle errors
+//         console.error(`Error processing job ${job.id}:`, error);
+//         // Throw the error to let Bull handle retries
+//         throw error;
+//     }
+// });
 
 
 bookingCntrl.booking = async (req, res) => {
@@ -47,6 +74,7 @@ bookingCntrl.list = async (req, res) => {
         res.json(booking)
     } catch (err) {
         res.json({ error: "internal server error" })
+        console.log(err)
     }
 }
 
@@ -137,24 +165,44 @@ bookingCntrl.MyBookings=async(req,res)=>{
         res.status(501).json({error:"server error"})
     }
 }
-
-bookingCntrl.accept=async(req,res)=>{
-    const id=req.params.id
-    try{
-
-        const booking=await Booking.findByIdAndUpdate(id,{$set:{ approveStatus:true}},{new:true}).populate({ path: 'customerId', select: 'email' }).populate({path: 'parkingSpaceId', select: 'title' })
-
-        sendEmail({
-            email:booking.customerId.email,
-        text:`your booking is approved click heare to make payment <a href=${"http://localhost:3000/bookings"}>click heare</a>`,
-        subject:"pickparking slot approval status"
-        })
-        res.status(201).json(booking)
-
-    }catch(err){
-        res.status(500).json({error:"internal server error"})
-        console.log(err)
-
+async function processBookingExpiration(bookingId,io ) {
+        try {
+            const booking = await Booking.findById(bookingId);
+            if (booking && booking.approveStatus && booking.paymentStatus=="pending" ) {
+                await Booking.findOneAndDelete(bookingId);
+                console.log(`Booking ${bookingId} removed due to non-payment.`);
+                io.emit("bookingId",{id:bookingId})
+            }
+        } catch (error) {
+            console.error(`Error processing booking ${bookingId}:`, error);
+        }
     }
-}
+
+bookingCntrl.accept = async (io,req, res) => {
+    const { id: bookingId } = req.params;
+
+    try {
+        const booking = await Booking.findByIdAndUpdate(bookingId, { $set: { approveStatus: true } }, { new: true })
+            .populate({ path: 'customerId', select: 'email' })
+            .populate({ path: 'parkingSpaceId', select: 'title' });
+            console.log(booking,'bbbbb')
+        // const paymentDueTime = moment().add(1, 'minutes').toDate();
+        // console.log(booking,'booking')
+        // console.log(new Date(paymentDueTime),'time')
+        // await bookingQueue.add({ bookingId, paymentDueTime }, { delay: 1 * 60 * 1000 });
+        sendEmail({
+            email: booking.customerId.email,
+            text: `Your booking for ${booking.parkingSpaceId.title} is approved. Click <a href="http://localhost:3000/bookings">here</a> to make payment.`,
+            subject: "PickParking Slot Approval Status"
+        });
+        setTimeout(() => {
+                        processBookingExpiration(booking._id,io);
+                    }, 2 * 60 * 1000);
+
+        res.status(201).json(booking);
+    } catch (err) {
+        console.error("Error accepting booking:", err);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
 module.exports = bookingCntrl
