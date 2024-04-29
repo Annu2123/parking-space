@@ -30,20 +30,9 @@ parkingSpaceCntrl.register = async (req,res) => {
        
         parkingSpace.address.coordinates=reverseLatLon(response.data.features[0].geometry.coordinates)
          await parkingSpace.save()
-        // const slots = []
-        // for (let i = 0; i < Number(parkingSpace.capacity); i++) {
-        //     const slot = new Slot({
-        //        parkingSpaceId:parkingSpace._id,
-        //        start_time:null,
-        //        end_time:null,
-
-        //     });
-        //     slots.push(slot)
-        // }
-        // await Slot.insertMany(slots)
         res.status(201).json(parkingSpace)
     } catch (err) {
-        res.status(400).json({ error: "internal server error" })
+        res.status(500).json({ error: "internal server error" })
         console.log(err.message)
     }
 }
@@ -73,33 +62,55 @@ parkingSpaceCntrl.update=async(req,res)=>{
 parkingSpaceCntrl.mySpace = async (req, res) => {
     try {
         const parkingSpace = await ParkingSpace.find({ ownerId: req.user.id })
-        res.status(201).json(parkingSpace)
+        res.status(200).json(parkingSpace)
     } catch (err) {
-        res.status(401).json({ error: "internal server error" })
+        res.status(500).json({ error: "internal server error" })
     }
 }
 
 
 parkingSpaceCntrl.approve = async (req, res) => {
     const id = req.params.id
-    const body = req.body
     try {
-        const space = await ParkingSpace.findOneAndUpdate({ _id: id }, body, { new: true })
+        const admin=await User.findOne({_id:req.user.id})
+        if(!admin){
+            res.status(401).json({error:"unauthorised"})
+        }
+        const space = await ParkingSpace.findOneAndUpdate({ _id: id }, {$set:{approveStatus:true}}, { new: true })
         res.status(201).json(space)
     } catch (err) {
-        res.status(400).json({ error: "internal server error" })
+        res.status(500).json({ error: "internal server error" })
     }
 }
 
 
+parkingSpaceCntrl.disable = async (req, res) => {
+    const id = req.params.id
+    try {
+        // const owner=await User.findOne({_id:req.user.id})
+        // if(!owner){
+        //     res.status(401).json({error:"unauthorised"})
+        // }
+        const parkingSpace=await ParkingSpace.findById({_id:id,ownerId:req.user.id})
+        console.log(parkingSpace)
+        if(!parkingSpace){
+            res.status(404).json({error:"parking Space not found"})
+        }
+        // const value=!parkingSpace.activeStatus
+        const space = await ParkingSpace.findOneAndUpdate({ _id: id }, {$set:{activeStatus:!parkingSpace.activeStatus}}, { new: true })
+        res.status(201).json(space)
+    } catch (err) {
+        res.status(500).json({ error: "internal server error" })
+    }
+}
+
 parkingSpaceCntrl.remove = async (req, res) => {
     const id = req.params.id
     try {
-        const parkingSpace = await ParkingSpace.findOneAndDelete({ _id: id, ownerId: req.user.id })
-        const slots = await Slot.deleteMany({ parkingSpaceId: id })
-        res.status(200).json({ parkingSpace, slots })
+        const parkingSpace = await ParkingSpace.findOneAndDelete({ _id: id, ownerId: req.user.id })      
+        res.status(200).json(parkingSpace)
     } catch (err) {
-        res.status(400).json({ error: "internal server error" })
+        res.status(500).json({ error: "internal server error" })
     }
 }
 
@@ -127,7 +138,7 @@ parkingSpaceCntrl.findByLatAndLog = async (req, res) => {
         longitude: log
     }
     try {
-        const parkingSpace = await ParkingSpace.find({ approveStatus: true })
+        const parkingSpace = await ParkingSpace.find({ approveStatus: true ,activeStatus:true})
         console.log("1")
         // const filteredParkingSpace = parkingSpace.filter(space =>
         //     isPointWithinRadius(space.coordinates, { lat: parseFloat(lat), log: parseFloat(log) }, parseInt(radius))
@@ -149,19 +160,20 @@ parkingSpaceCntrl.findByLatAndLog = async (req, res) => {
     }
 }
 
-parkingSpaceCntrl.approvalList=async(req,res)=>{
-    const adminId=req.user.id
-    try{
-        const admin=await User.findById(adminId)
-        if(!admin){
-            res.status(404).json({error:"admin details not found"})
-        }
-        const approve=await ParkingSpace.find({approveStatus:false})
-        res.status(202).json(approve)
+// parkingSpaceCntrl.approvalList=async(req,res)=>{
+//     const adminId=req.user.id
+//     try{
+        // const admin=await User.findById(adminId)
+        // if(!admin){
+        //     res.status(404).json({error:"admin details not found"})
+        // }
+        // console.log("asdf")
+        // const approve=await ParkingSpace.find({approveStatus:false}).populate('ownerId')
+        // res.status(202).json(approve)
 
-    }catch(err){
-        res.status(500).json({error:"internal server error"})
-    }
-}
+//     }catch(err){
+//         res.status(500).json({error:"intnal server error"})
+//     }
+// }
 
 module.exports = parkingSpaceCntrl

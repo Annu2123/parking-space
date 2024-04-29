@@ -231,4 +231,15 @@ usersCntrl.listOwner=async(req,res)=>{
         res.status(500).json({error:"internal server error"})
     }
 }
+
+//find owners based on query
+usersCntrl.findOwners=async(req,res)=>{
+    const search =req.query.search || ""
+    try{
+        const owners=await User.find({name:{$regex:search,$options:'i'}})
+        res.status(202).json(owners)
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+}
 module.exports=usersCntrl

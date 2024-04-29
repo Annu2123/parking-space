@@ -10,7 +10,7 @@ function momentConvertion(date) {
     return moment(date).format("YYYY-MM-DD HH:mm:ss")
 }
 
-const calculateDuration = (startDateTime,endDateTime) => {
+const calculateDuration = (startDateTime, endDateTime) => {
     const startDate = new Date(startDateTime)
     const endDate = new Date(endDateTime)
     const difference = endDate - startDate
@@ -28,22 +28,22 @@ bookingCntrl.booking = async (req, res) => {
     // const booking = new Booking(body)
     try {
         const parkingSpace = await ParkingSpace.findById(parkingSpaceId).populate('ownerId')
-        if(!parkingSpace){
-            return res.status(400).json({error:"parking space not fount"})
+        if (!parkingSpace) {
+            return res.status(400).json({ error: "parking space not fount" })
         }
-        const body= _.pick(req.body,["startDateTime","endDateTime","vehicleId"])
-        const booking=new Booking(body)
+        const body = _.pick(req.body, ["startDateTime", "endDateTime", "vehicleId"])
+        const booking = new Booking(body)
         booking.parkingSpaceId = parkingSpaceId
         booking.spaceTypesId = spaceTypesId
-        booking.customerId = req.user.id      
-        const spaceType=parkingSpace.spaceTypes.find((ele)=>{
-            if(ele._id == spaceTypesId){
+        booking.customerId = req.user.id
+        const spaceType = parkingSpace.spaceTypes.find((ele) => {
+            if (ele._id == spaceTypesId) {
                 return ele
             }
         })
-         const totalAmount=spaceType.amount * calculateDuration(booking.startDateTime,booking.endDateTime)
-         booking.amount=totalAmount
-        
+        const totalAmount = spaceType.amount * calculateDuration(booking.startDateTime, booking.endDateTime)
+        booking.amount = totalAmount
+
         await booking.save()
         const bookings = await Booking.findOne({ _id: booking._id }).populate("parkingSpaceId").populate("vehicleId", "vehicleName")
         sendEmail({
@@ -126,7 +126,8 @@ bookingCntrl.findSpace = async (req, res) => {
         if (availableSpace == 0) {
             return res.status(404).json({ error: "Space is not available" })
         }
-        res.json(availableSpace)
+        spaceType.capacity = availableSpace
+        res.json(spaceType)
     } catch (err) {
         console.log(err)
         res.json({ error: "internal server error" })
@@ -136,14 +137,20 @@ bookingCntrl.findSpace = async (req, res) => {
 bookingCntrl.myParkingSpace = async (req, res) => {
     try {
         const id = req.user.id
-        const parkingSpace = await ParkingSpace.findOne({ ownerId: id })
-
-        if (!parkingSpace) {
+        const parkingSpace = await ParkingSpace.find({ ownerId: id })
+        if (!parkingSpace || parkingSpace.length === 0) {
             return res.status(404).json({ error: "you dont have listed parking space" })
         }
-        const bookings = await Booking.find({ parkingSpaceId: parkingSpace._id }).populate('customerId').populate('vehicleId')
-        res.status(201).json(bookings)
-
+        const bookings = []
+        for (const space of parkingSpace) {
+            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id })
+                .populate('customerId')
+                .populate('vehicleId')
+                .populate("parkingSpaceId")
+            bookings.push(...bookingOfSpace)
+        }
+        console.log("spacebooking", bookings)
+        res.status(200).json(bookings)
     } catch (err) {
         res.status(500).json({ error: "internal server error" })
     }
@@ -151,7 +158,7 @@ bookingCntrl.myParkingSpace = async (req, res) => {
 
 bookingCntrl.MyBookings = async (req, res) => {
     try {
-        const response = await Booking.find({ customerId: req.user.id }).populate("parkingSpaceId").populate("vehicleId", "vehicleName")
+        const response = await Booking.find({ customerId: req.user.id }).populate("parkingSpaceId").populate("vehicleId")
         res.status(201).json(response)
     } catch (err) {
         console.log(err)
@@ -183,12 +190,44 @@ bookingCntrl.accept = async (req, res) => {
 
     }
 }
-bookingCntrl.listBookings=async(req,res)=>{
-    try{
-        const bookings=await Booking.find({approveStatus:true,paymentStatus:"success"})
+bookingCntrl.listBookings = async (req, res) => {
+    try {
+        const bookings = await Booking.find({ approveStatus: true, paymentStatus: "success" })
         res.status(202).json(bookings)
-    }catch(err){
-        res.status(500).json({error:"internal server error"})
+    } catch (err) {
+        res.status(500).json({ error: "internal server error" })
+    }
+}
+bookingCntrl.rejectBooking = async (req, res) => {
+    const id = req.params.id
+    try {
+        const booking = await Booking.findOneAndDelete(id, { $set: { status: cancel } }, { new: true })
+            .populate("customerId")
+            .populate("vehicleId")
+            .populate("parkingSpaceId")
+        res.status(200).json(booking)
+
+    } catch (err) {
+        res.status(500).json({ error: "internal server error" })
+    }
+}
+bookingCntrl.updatePayment = async (req, res) => {
+    const id = req.params.id
+    console.log(id)
+    try {
+        const booking = await Booking.findOneAndUpdate({ _id: id }, { $set: { paymentStatus: "success" } }, { new: true })
+        res.status(200).json(booking)
+    } catch (err) {
+        res.status(500).json({ error: "interna; server error" })
+    }
+}
+bookingCntrl.paymentFailerUpdate = async (req, res) => {
+    const id = req.params.id
+    try {
+        const booking = await Booking.findByIdAndUpdate({ _id: id }, { $set: { paymentStatus: 'failed' } }, { new: true })
+        res.status(200).json(booking)
+    } catch (err) {
+        res.status(500).json({ error: "internal server error" })
     }
 }
 module.exports = bookingCntrl

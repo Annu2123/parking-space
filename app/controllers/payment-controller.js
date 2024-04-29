@@ -1,3 +1,4 @@
+const { trusted } = require('mongoose')
 const Payment=require('../models/payment-model')
 const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY)
 const {pick}=require('lodash')
@@ -45,14 +46,34 @@ paymentsCntrl.pay = async(req,res)=>{
         //create a payment
         const payment = new Payment(body)
         payment.bookingId=body.bookingId
-        payment.transactionId = session.id
+        payment.transactionId = session.id//on clik yo pay strip will create one id
         payment.amount = Number(body.amount)
         payment.paymentType = "card"
         await payment.save()
-        res.json({id:session.id,url: session.url})
+        res.json({id:session.id,url: session.url,payment})
     }catch(err){
         console.log(err)
         res.status(500).json({error:'Internal Server Error'})
     }
 }  
+
+paymentsCntrl.successUpdate = async(req ,res)=>{
+    const id = req.params.id
+    try{
+        const payment = await Payment.findOneAndUpdate({transactionId:id} , {$set:{paymentStatus:'Successful'} } , {new:true})
+        res.json(payment)
+    } catch(err){
+        console.log(err)
+        res.status(500).json({error:'Internal Server Error'})
+    }
+}
+paymentsCntrl.failerUpdate=async(req,res)=>{
+    const id=req.params.id
+    try{
+        const payment=await Payment.findOneAndUpdate({transactionId:id},{$set:{paymentStatus:"failed"}},{new:true})
+        res.status(200).json(payment)
+    }catch(err){
+        res.status(500).json({error:"internal server errror"})
+    }
+}
 module.exports=paymentsCntrl
