@@ -48,9 +48,9 @@ usersCntrl.verifyEmail = async (req, res) => {
         res.status(401).json({ errors: errors.array() })
     }
     const { email, otp } = req.body
+    console.log(email,otp,'verify')
     try {
         const user = await User.findOneAndUpdate({ email: email, otp: otp }, { $set: { isverified: true } }, { new: true })
-        console.log(user)
         if (!user) {
             return res.status(401).json("email and otp is not currect")
         }
@@ -74,6 +74,15 @@ usersCntrl.login=async(req,res)=>{
        const password=await bcryptjs.compare(body.password,user.password)
        if(!password){
         return res.status(401).json({error:"email or password is wrong"})
+       }
+       if(!user.isverified){
+        console.log(user,'user')
+        sendEmail({
+            email:user.email,
+            subject:"emial verification",
+            text:`you have registerd but not verified , please verify your email with otp ${user.otp}`
+        })
+        return res.status(403).json({ error: "User is not verified",email:user.email })
        }
        const tokenData={
         id:user._id,
@@ -149,7 +158,7 @@ usersCntrl.forgotPassword=async(req,res)=>{
         const response=await User.findOneAndUpdate({email:email},{otp:otp},{new:true})
         sendEmail({
             email: user.email,
-            subject: "EVENT_SPOT@ <support> Password Change",
+            subject: "Pick_Parking@ <support> Password Change",
             text: `set password with otp ${otp}
              don't share otp to any one`
         })
