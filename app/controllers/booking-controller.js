@@ -3,42 +3,13 @@ const ParkingSpace = require('../models/parkingSpace-model')
 const moment = require('moment')
 const { validationResult } = require('express-validator')
 const User = require('../models/users-model')
-
 const sendEmail=require("../utilities/node-mailer/email")
 const Queue = require('bull');
-
 const _ = require('lodash')
-
 const bookingCntrl = {}
 function momentConvertion(date) {
     return moment(date).format("YYYY-MM-DD HH:mm:ss")
 }
-// const bookingQueue = new Queue('bookingQueue', {
-//     maxRetriesPerRequest: 50 // Adjust the value as needed
-// });
-// bookingQueue.process(async (job) => {
-//     // Extract data from the job
-//     const { bookingId, paymentDueTime } = job.data;
-//     console.log(bookingId,'id')
-
-//     try {
-//         // Find the booking by ID
-//         const booking = await Booking.findById(bookingId);
-
-//         // Check if the booking exists, is approved, payment is not made, and it's past the payment due time
-//         if (booking && booking.approveStatus && !booking.paidStatus && moment().isSameOrAfter(paymentDueTime)) {
-//             // Delete the booking if conditions are met
-//             await Booking.findByIdAndRemove(bookingId);
-//             console.log(`Booking ${bookingId} removed due to non-payment.`);
-//         }
-//     } catch (error) {
-//         // Log and handle errors
-//         console.error(`Error processing job ${job.id}:`, error);
-//         // Throw the error to let Bull handle retries
-//         throw error;
-//     }
-// });
-
 const calculateDuration = (startDateTime, endDateTime) => {
     const startDate = new Date(startDateTime)
     const endDate = new Date(endDateTime)
@@ -196,7 +167,7 @@ bookingCntrl.MyBookings = async (req, res) => {
         res.status(501).json({ error: "server error" })
     }
 }
-async function processBookingExpiration(bookingId,io ) {
+async function processBookingExpiration(bookingId ) {
         try {
             const booking = await Booking.findById(bookingId);
             if (booking && booking.approveStatus && booking.paymentStatus=="pending" ) {
@@ -210,11 +181,12 @@ async function processBookingExpiration(bookingId,io ) {
     }
 
 
-    bookingCntrl.accept = async (req, res, io) => {
+    bookingCntrl.accept = async (req,res,io) => {
+        console.log(io,'ioooo')
+        console.log(req.params.id,'idddd')
         const id = req.params.id;
-        console.log(io,'io')
         try {
-            const booking = await Booking.findByIdAndUpdate(id, { $set: { approveStatus: true } }, { new: true })
+            const booking = await Booking.findByIdAndUpdate({_id:id}, { $set: { approveStatus: true } }, { new: true })
                 .populate({ path: 'customerId', select: 'email' })
                 .populate({ path: 'parkingSpaceId', select: 'title' });
             sendEmail({
@@ -224,7 +196,7 @@ async function processBookingExpiration(bookingId,io ) {
             });
     
             setTimeout(() => {
-                processBookingExpiration(booking._id, io);
+                processBookingExpiration(io,booking._id);
             }, 2 * 60 * 1000);
     
             res.status(201).json(booking);

@@ -34,7 +34,7 @@ const bookingCntrl = require('./app/controllers/booking-controller')
 const paymentsCntrl=require('./app/controllers/payment-controller')
 const spaceCartCtlr=require('./app/controllers/spacecart-controller')
 const server = http.createServer(app);
-   const  io = socketIo(server, {
+const  io = socketIo(server, {
         cors: {
             origin: "*",  
             methods: ["GET", "POST"]
@@ -110,10 +110,7 @@ app.get('/api/booking/my/:id', bookingCntrl.list)
 app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookingCntrl.MyBookings)
 app.get('/api/bookings/admin/list/:id',authenticateUser,authorizeUser(["admin"]),bookingCntrl.adminList)
 
-app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),(req,res)=>{
-    bookingCntrl.accept(req,res,io)
-})
-
+app.put('/api/approve/booking/:id', authenticateUser, authorizeUser(['owner']),(req,res)=>{bookingCntrl.accept(req,res,io)});
 //spcaecart api's
 app.post ("/api/spaceCarts/create/:id",authenticateUser,authorizeUser(["customer"]),spaceCartCtlr.create)
 app.delete("/api/spacecart/delete/:id",authenticateUser,authorizeUser(["customer"]),spaceCartCtlr.remove)
@@ -128,7 +125,7 @@ app.post('/api/create-checkout-session',authenticateUser,paymentsCntrl.pay)
 app.put('/api/payment/status/update/:id' , paymentsCntrl.successUpdate)
 app.put('/api/payment/failer/:id',paymentsCntrl.failerUpdate)
 app.get('/api/payment/list',authenticateUser,authorizeUser(["customer"]),paymentsCntrl.list)
-app.listen(port, () => {
+server.listen(port, () => {
 
     console.log("server is running in " + port)
 })
