@@ -278,7 +278,7 @@ bookingCntrl.updatePayment = async (req, res) => {
     const id = req.params.id
     console.log(id,'iiiiiiiii')
     try {
-        const booking = await Booking.findOneAndUpdate({ _id: id }, { $set: { paymentStatus: "completed" } }, { new: true })
+        const booking = await Booking.findOneAndUpdate({ _id: id }, { $set: { paymentStatus: "success" } }, { new: true })
         res.status(200).json(booking)
     } catch (err) {
         res.status(500).json({ error: "interna; server error" })
