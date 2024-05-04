@@ -33,7 +33,7 @@ parkingSpaceCntrl.register = async (req,res) => {
         res.status(201).json(parkingSpace)
     } catch (err) {
         res.status(500).json({ error: "internal server error" })
-        console.log(err.message)
+        console.log(err)
     }
 }
 
@@ -118,7 +118,6 @@ parkingSpaceCntrl.remove = async (req, res) => {
 parkingSpaceCntrl.list = async (req, res) => {
     try {
         const parkingSpace = await ParkingSpace.find().populate("ownerId")
-        console.log(parkingSpace)
         res.status(201).json(parkingSpace)
     } catch {
         res.status(404).json({ error: 'internal server error' })

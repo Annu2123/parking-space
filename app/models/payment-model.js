@@ -4,6 +4,10 @@ const paymentSchema=new Schema ({
         type:Schema.Types.ObjectId,
         ref:"Booking"
     },
+    customer:{
+        type:Schema.Types.ObjectId,
+        ref:"User"
+    },
     transactionId:{
         type:String,
          default:null

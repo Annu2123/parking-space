@@ -5,6 +5,7 @@ const {pick}=require('lodash')
 const paymentsCntrl={}
 
 paymentsCntrl.pay = async(req,res)=>{
+    console.log(req.user.id,'id')
     // const errors = validationResult(req)
     // if(!errors.isEmpty()){
     //     return res.status(400).json({errors:errors.array()})
@@ -49,6 +50,7 @@ paymentsCntrl.pay = async(req,res)=>{
         payment.transactionId = session.id//on clik yo pay strip will create one id
         payment.amount = Number(body.amount)
         payment.paymentType = "card"
+        payment.customer=req.user.id
         await payment.save()
         res.json({id:session.id,url: session.url,payment})
     }catch(err){
@@ -74,6 +76,15 @@ paymentsCntrl.failerUpdate=async(req,res)=>{
         res.status(200).json(payment)
     }catch(err){
         res.status(500).json({error:"internal server errror"})
+    }
+}
+paymentsCntrl.list=async(req,res)=>{
+    try{
+     const response=await Payment.find({customer:req.user.id}).sort({createdAt:-1})
+     res.json(response)
+    }catch(err){
+        console.log(err)
+        res.status(501).json({error:"internal server error"})
     }
 }
 module.exports=paymentsCntrl

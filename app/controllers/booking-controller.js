@@ -71,7 +71,8 @@ bookingCntrl.booking = async (req, res) => {
             }
         })
         const totalAmount = spaceType.amount * calculateDuration(booking.startDateTime, booking.endDateTime)
-        booking.amount = totalAmount
+        console.log(totalAmount,'tot')
+        booking.amount = Math.floor(totalAmount).toFixed(0);
 
         await booking.save()
         const bookings = await Booking.findOne({ _id: booking._id }).populate("parkingSpaceId").populate("vehicleId", "vehicleName")
@@ -188,7 +189,7 @@ bookingCntrl.myParkingSpace = async (req, res) => {
 
 bookingCntrl.MyBookings = async (req, res) => {
     try {
-        const response = await Booking.find({ customerId: req.user.id }).populate("parkingSpaceId").populate("vehicleId")
+        const response = await Booking.find({ customerId: req.user.id }).populate("parkingSpaceId").populate("vehicleId").sort({ createdAt:-1 })
         res.status(201).json(response)
     } catch (err) {
         console.log(err)
@@ -209,37 +210,30 @@ async function processBookingExpiration(bookingId,io ) {
     }
 
 
-bookingCntrl.accept = async (io,req, res) => {
-    const { id: bookingId } = req.params;
-
-    try {
-        const booking = await Booking.findByIdAndUpdate(bookingId, { $set: { approveStatus: true } }, { new: true })
-            .populate({ path: 'customerId', select: 'email' })
-            .populate({ path: 'parkingSpaceId', select: 'title' });
-            console.log(booking,'bbbbb')
-        // const paymentDueTime = moment().add(1, 'minutes').toDate();
-        // console.log(booking,'booking')
-        // console.log(new Date(paymentDueTime),'time')
-        // await bookingQueue.add({ bookingId, paymentDueTime }, { delay: 1 * 60 * 1000 });
-        sendEmail({
-            email: booking.customerId.email,
-            text: `Your booking for ${booking.parkingSpaceId.title} is approved. Click <a href="http://localhost:3000/bookings">here</a> to make payment.`,
-            subject: "PickParking Slot Approval Status"
-        });
-        setTimeout(() => {
-                        processBookingExpiration(booking._id,io);
-                    }, 2 * 60 * 1000);
-
-
-        res.status(201).json(booking);
-    } catch (err) {
-        console.error("Error accepting booking:", err);
-        res.status(500).json({ error: "Internal Server Error" });
-    }
-
-}
-
-}
+    bookingCntrl.accept = async (req, res, io) => {
+        const id = req.params.id;
+        console.log(io,'io')
+        try {
+            const booking = await Booking.findByIdAndUpdate(id, { $set: { approveStatus: true } }, { new: true })
+                .populate({ path: 'customerId', select: 'email' })
+                .populate({ path: 'parkingSpaceId', select: 'title' });
+            sendEmail({
+                email: booking.customerId.email,
+                text: `Your booking for ${booking.parkingSpaceId.title} is approved. Click <a href="http://localhost:3000/bookings">here</a> to make payment.`,
+                subject: "PickParking Slot Approval Status"
+            });
+    
+            setTimeout(() => {
+                processBookingExpiration(booking._id, io);
+            }, 2 * 60 * 1000);
+    
+            res.status(201).json(booking);
+        } catch (err) {
+            console.error("Error accepting booking:", err);
+            res.status(500).json({ error: "Internal Server Error" });
+        }
+    };
+    
 bookingCntrl.listBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ approveStatus: true, paymentStatus: "success" })
@@ -248,10 +242,20 @@ bookingCntrl.listBookings = async (req, res) => {
         res.status(500).json({ error: "internal server error" })
     }
 }
+bookingCntrl.adminList=async(req,res)=>{
+    const id=req.params.id
+    try{
+        const response=await Booking.find({customerId:id})
+        res.status(201).json(response)
+    }catch(err){
+        console.log(err)
+        res.status(err).json({error:"internal server error"})
+    }
+}
 bookingCntrl.rejectBooking = async (req, res) => {
     const id = req.params.id
     try {
-        const booking = await Booking.findOneAndDelete(id, { $set: { status: cancel } }, { new: true })
+        const booking = await Booking.findOneAndUpdate(id, { $set: { isRemoved: true } }, { new: true })
             .populate("customerId")
             .populate("vehicleId")
             .populate("parkingSpaceId")
@@ -263,9 +267,9 @@ bookingCntrl.rejectBooking = async (req, res) => {
 }
 bookingCntrl.updatePayment = async (req, res) => {
     const id = req.params.id
-    console.log(id)
+    console.log(id,'iiiiiiiii')
     try {
-        const booking = await Booking.findOneAndUpdate({ _id: id }, { $set: { paymentStatus: "success" } }, { new: true })
+        const booking = await Booking.findOneAndUpdate({ _id: id }, { $set: { paymentStatus: "completed" } }, { new: true })
         res.status(200).json(booking)
     } catch (err) {
         res.status(500).json({ error: "interna; server error" })

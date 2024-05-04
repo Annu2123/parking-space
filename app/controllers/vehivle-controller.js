@@ -58,13 +58,26 @@ vehicleCtlr.update=async(req,res)=>{
     }
 }
 vehicleCtlr.approve=async(req,res)=>{
-    const {id}=req
+    const {id}=req.params
+    console.log(id,'ii')
     try{
-        const response=await Vehicle.findOneAndUpdate(id,{$set:{isVerified:true}},{new:true})
+        const response=await Vehicle.findOneAndUpdate({_id:id},{$set:{isVerified:true}},{new:true})
         res.status(201).json(response)
     }catch(err){
         console.log(err)
         res.status(401).json({error:"internal server error"})
+    }
+}
+vehicleCtlr.details=async(req,res)=>{
+    try{
+        const response=await Vehicle.find().populate({
+            path:"customerId",
+            select:"name"
+        })
+        res.status(201).json(response)
+    }catch(err){
+        console.log(err)
+    res.status(401).json({error:"internal server error"})
     }
 }
 module.exports=vehicleCtlr
