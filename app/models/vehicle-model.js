@@ -8,6 +8,7 @@ const vehicleSchema=new Schema({
     vehicleName:String,
     documents:String,
     vehicleType:String,
+    vehicleImage:String,
     isVerified:{
         type:Boolean,
         default:false

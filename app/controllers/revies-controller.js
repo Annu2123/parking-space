@@ -19,7 +19,6 @@ reviewsController.create = async (req, res) => {
         if (!booking) {
             return res.status(401).json({ error: "u r not allowed to give review" })
         }
-        console.log(bookingId, 'boo')
         const reviewExist = await Review.findOne({
             bookingId: bookingId
         })
@@ -40,8 +39,10 @@ reviewsController.create = async (req, res) => {
 //listing all reviews
 reviewsController.list = async (req, res) => {
     try {
-        const response = await Review.find().populate("bookingId")
-        console.log(response,'uy')
+        const response = await Review.find().populate("bookingId").populate({
+            path:"customerId",
+            select:"name"
+        })
         res.status(201).json(response)
     } catch (err) {
         res.status(501).json({ error: "internal serverError" })
@@ -88,22 +89,3 @@ reviewsController.update = async (req, res) => {
     }
 }
 module.exports = reviewsController
-// onst reviesCntrl={}c
-// reviesCntrl.create=async(req,res)=>{
-//     const errors=validationResult(req)
-//     if(!errors.isEmpty()){
-//         return res.status(400).json({errors:errors.array()})
-//     }
-//     const parkingSpaceId=req.params.parkingSpaceId
-//     const body=req.body
-//     const revies=new Revies(body)
-//     revies.parkingSpaceId=parkingSpaceId
-//     revies.customerId=req.user.id
-//     try{
-//        await revies.save()
-//        res.status(201).json(revies)
-//     }catch{
-//         res.status(500).json({errors:"internal server error"})
-//     }
-// }
-// module.exports=reviesCntrl

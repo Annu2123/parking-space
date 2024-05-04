@@ -20,6 +20,10 @@ const bookingParkingSpaceSchema=new Schema({
         type:String,
         default:"pending"
     },
+    isRemoved:{
+        type:Boolean,
+        default:false
+    },
     startDateTime:Date,
     endDateTime:Date,
     amount:Number,

@@ -72,7 +72,8 @@ bookingCntrl.booking = async (req, res) => {
             }
         })
         const totalAmount = spaceType.amount * calculateDuration(booking.startDateTime, booking.endDateTime)
-        booking.amount = totalAmount
+        console.log(totalAmount,'tot')
+        booking.amount = Math.floor(totalAmount).toFixed(0);
 
         await booking.save()
         const bookings = await Booking.findOne({ _id: booking._id }).populate("parkingSpaceId").populate("vehicleId", "vehicleName")
@@ -193,7 +194,7 @@ bookingCntrl.myParkingSpace = async (req, res) => {
 
 bookingCntrl.MyBookings = async (req, res) => {
     try {
-        const response = await Booking.find({ customerId: req.user.id }).populate("parkingSpaceId").populate("vehicleId")
+        const response = await Booking.find({ customerId: req.user.id }).populate("parkingSpaceId").populate("vehicleId").sort({ createdAt:-1 })
         res.status(201).json(response)
     } catch (err) {
         console.log(err)
@@ -250,6 +251,16 @@ bookingCntrl.listBookings = async (req, res) => {
         res.status(500).json({ error: "internal server error" })
     }
 }
+bookingCntrl.adminList=async(req,res)=>{
+    const id=req.params.id
+    try{
+        const response=await Booking.find({customerId:id})
+        res.status(201).json(response)
+    }catch(err){
+        console.log(err)
+        res.status(err).json({error:"internal server error"})
+    }
+}
 bookingCntrl.rejectBooking = async (req, res) => {
     const id = req.params.id
     try {      
@@ -265,9 +276,9 @@ bookingCntrl.rejectBooking = async (req, res) => {
 }
 bookingCntrl.updatePayment = async (req, res) => {
     const id = req.params.id
-    console.log(id)
+    console.log(id,'iiiiiiiii')
     try {
-        const booking = await Booking.findOneAndUpdate({ _id: id }, { $set: { paymentStatus: "success" } }, { new: true })
+        const booking = await Booking.findOneAndUpdate({ _id: id }, { $set: { paymentStatus: "completed" } }, { new: true })
         res.status(200).json(booking)
     } catch (err) {
         res.status(500).json({ error: "interna; server error" })

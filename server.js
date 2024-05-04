@@ -9,6 +9,8 @@ const configDb = require('./config/db')
 const nodeCronCtlr=require("./app/node-cron/bookingStatus")
 nodeCronCtlr()
 configDb()
+const app = express()
+const port = 3045
 const {
     userRegisterSchemaValidation,
     usersLoginSchema,
@@ -31,8 +33,6 @@ const vehicleCtlr = require("./app/controllers/vehivle-controller")
 const bookingCntrl = require('./app/controllers/booking-controller')
 const paymentsCntrl=require('./app/controllers/payment-controller')
 const spaceCartCtlr=require('./app/controllers/spacecart-controller')
-const app = express()
-const port = 3045
 const server = http.createServer(app);
    const  io = socketIo(server, {
         cors: {
@@ -97,11 +97,12 @@ app.post("/API/vehicle/register", authenticateUser, authorizeUser(["customer"]),
 app.get("/API/vehicles/list", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.list)//vehicles list
 app.put("/API/vehicles/update/:id", authenticateUser, authorizeUser(["customer"]), checkSchema(vehicleValidationSchema), upload.single('documents'),vehicleCtlr.update)//vehicles update
 app.put("/api/vehicle/approval/:id",authenticateUser,authorizeUser(['admin']),vehicleCtlr.approve)
+app.get("/api/vehicles/details",authenticateUser,authorizeUser(["admin"]),vehicleCtlr.details)
 app.delete("/API/vehicles/remove/:id", authenticateUser, authorizeUser(["customer"]), vehicleCtlr.remove)//vehicles remove
 
 // revies api's
 app.post("/api/booking/:bookingId/parkingSpace/:parkingSpaceId", authenticateUser, authorizeUser(["customer"]), checkSchema(reviesValidation), reviewsController.create)//create review
-app.get("/api/reviews/list", authenticateUser, reviewsController.list)//list of all reviews
+app.get("/api/reviews/list", reviewsController.list)//list of all reviews
 app.get("/api/reviews/space/:id", authenticateUser, authorizeUser(["owner"]), reviewsController.spaceReview)//listing based on space
 app.delete("/api/reviews/remove/:id", authenticateUser, authorizeUser(["customer"]), reviewsController.remove)//remove review
 app.put("/api/reviews/update/:id", authenticateUser, authorizeUser(["customer"]), reviewsController.update)
@@ -110,6 +111,7 @@ app.put("/api/reviews/update/:id", authenticateUser, authorizeUser(["customer"])
 app.post('/api/booking/:parkingSpaceId/spaceTypes/:spaceTypesId', authenticateUser, authorizeUser(["customer"]),checkSchema(bookingParkingSpaceValidation), bookingCntrl.booking)
 app.get('/api/booking/my/:id', bookingCntrl.list)
 app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookingCntrl.MyBookings)
+app.get('/api/bookings/admin/list/:id',authenticateUser,authorizeUser(["admin"]),bookingCntrl.adminList)
 
 app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),(req,res)=>{
     bookingCntrl.accept(req,res,io)
@@ -125,9 +127,10 @@ app.get('/api/owners/query',authenticateUser,authorizeUser(["admin"]),usersCntrl
 app.put('/api/booking/payment/update/:id',bookingCntrl.updatePayment)
 app.put('/api/booking/payment/failer/:id',bookingCntrl.paymentFailerUpdate)
 //payment api's
-app.post('/api/create-checkout-session',paymentsCntrl.pay)
+app.post('/api/create-checkout-session',authenticateUser,paymentsCntrl.pay)
 app.put('/api/payment/status/update/:id' , paymentsCntrl.successUpdate)
 app.put('/api/payment/failer/:id',paymentsCntrl.failerUpdate)
+app.get('/api/payment/list',authenticateUser,authorizeUser(["customer"]),paymentsCntrl.list)
 app.listen(port, () => {
 
     console.log("server is running in " + port)
