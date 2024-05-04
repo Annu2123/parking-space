@@ -72,10 +72,10 @@ parkingSpaceCntrl.mySpace = async (req, res) => {
 parkingSpaceCntrl.approve = async (req, res) => {
     const id = req.params.id
     try {
-        const admin=await User.findOne({_id:req.user.id})
-        if(!admin){
-            res.status(401).json({error:"unauthorised"})
-        }
+        // const admin=await User.findOne({_id:req.user.id})
+        // if(!admin){
+        //     res.status(401).json({error:"unauthorised"})
+        // }
         const space = await ParkingSpace.findOneAndUpdate({ _id: id }, {$set:{approveStatus:true}}, { new: true })
         res.status(201).json(space)
     } catch (err) {

@@ -227,14 +227,23 @@ usersCntrl.listCustomer=async(req,res)=>{
     }
 }
 usersCntrl.listOwner=async(req,res)=>{
+    const page = parseInt(req.query.page) || 1
+    const pageSize = parseInt(req.query.pageSize) || 4
+    const startIndex = (page - 1) * pageSize
+    const endIndex = page * pageSize
     const adminId=req.user.id
     try{
         const admin=await User.findById(adminId)
         if(!admin){
             return res.status(404).json({error:"admin not found"})
         }
-        const owner=await User.find({role:'owner'})
-        res.status(200).json(owner)
+        const owner=await User.find({role:'owner'}).skip(startIndex).limit(pageSize)
+        res.status(200).json({
+            currentPage: page,
+            pageSize: pageSize,
+            totalPages: Math.ceil(owner.length / pageSize),
+            data: owner
+        })
 
     }catch(err){
         res.status(500).json({error:"internal server error"})
