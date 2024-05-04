@@ -212,13 +212,12 @@ async function processBookingExpiration(bookingId, io) {
         console.error(`Error processing booking ${bookingId}:`, error);
     }
 }
-
-
 bookingCntrl.accept = async (req, res, io) => {
     const id = req.params.id
     console.log(id)
     try {
         const booking = await Booking.findByIdAndUpdate({ _id: id }, { $set: { approveStatus: true } }, { new: true })
+
             .populate({ path: 'customerId', select: 'email' })
             .populate({ path: 'parkingSpaceId', select: 'title' });
         console.log(booking, 'bbbbb')
@@ -243,8 +242,6 @@ bookingCntrl.accept = async (req, res, io) => {
     }
 
 }
-
-
 bookingCntrl.listBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ approveStatus: true, paymentStatus: "success" })

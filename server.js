@@ -112,7 +112,7 @@ app.get('/api/booking/my/:id', bookingCntrl.list)
 app.get("/api/bookings/list",authenticateUser,authorizeUser(["customer"]),bookingCntrl.MyBookings)
 
 app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),(req,res)=>{
-    bookingCntrl.accept(io,req,res)
+    bookingCntrl.accept(req,res,io)
 })
 
 //spcaecart api's
