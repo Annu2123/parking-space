@@ -73,8 +73,11 @@ app.delete('/api/parkingSpace/:id', authenticateUser, authorizeUser(["owner"]), 
 app.put('/api/parkingSpace/update/:id',authenticateUser,authorizeUser(["owner"]),parkingSpaceCntrl.update) 
 app.get('/api/myParkingSpace/booking',authenticateUser,authorizeUser(["owner"]),bookingCntrl.myParkingSpace)
 app.put('/api/approve/booking/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.accept)
+app.put('/api/reject/booking/:id',authenticateUser,authorizeUser(['owner']),bookingCntrl.rejectBooking)
 app.delete('/api/parkingSpace/remove/:id',authenticateUser,authorizeUser(['owner']),parkingSpaceCntrl.remove)
-app.put('/api/parkingSpace/disable/:id',authenticateUser,authorizeUser(['owner']),parkingSpaceCntrl.disable)
+app.put('/api/parkingSpace/disable/:id',authenticateUser,authorizeUser(['owner','admin']),parkingSpaceCntrl.disable)
+app.get('/api/booking/today',authenticateUser,authorizeUser(["owner"]),bookingCntrl.todayBooking)
+app.get('/api/current/booking',authenticateUser,authorizeUser(['owner']),bookingCntrl.currentBooking)
 
 //admin routes
 app.get('/api/parkingSpace',authenticateUser,authorizeUser(['admin']), parkingSpaceCntrl.list)

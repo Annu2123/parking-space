@@ -4,7 +4,7 @@ const moment = require('moment')
 const { validationResult } = require('express-validator')
 const User = require('../models/users-model')
 
-const sendEmail=require("../utilities/node-mailer/email")
+const sendEmail = require("../utilities/node-mailer/email")
 const Queue = require('bull');
 
 const _ = require('lodash')
@@ -47,6 +47,7 @@ const calculateDuration = (startDateTime, endDateTime) => {
     return durationHours
 }
 bookingCntrl.booking = async (req, res) => {
+    //console.log('io' , io)
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() })
@@ -81,6 +82,7 @@ bookingCntrl.booking = async (req, res) => {
             text: `${parkingSpace.ownerId.name} your parking space is booked customer is waiting for approval.`,
             subject: "pickparking customer approval status"
         })
+       // io.to(parkingSpace.ownerId.toString()).emit('bookingUpdate' , bookings)
         res.status(200).json(bookings)
     } catch (err) {
         console.log(err)
@@ -166,6 +168,9 @@ bookingCntrl.findSpace = async (req, res) => {
 }
 
 bookingCntrl.myParkingSpace = async (req, res) => {
+    const page = req.query.page || 1
+    const limit = req.query.limit || 5
+    console.log(page , limit)
     try {
         const id = req.user.id
         const parkingSpace = await ParkingSpace.find({ ownerId: id })
@@ -174,13 +179,13 @@ bookingCntrl.myParkingSpace = async (req, res) => {
         }
         const bookings = []
         for (const space of parkingSpace) {
-            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id })
+            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id }).skip((page -1)* limit).limit(limit)
                 .populate('customerId')
                 .populate('vehicleId')
                 .populate("parkingSpaceId")
             bookings.push(...bookingOfSpace)
         }
-        console.log("spacebooking", bookings)
+        
         res.status(200).json(bookings)
     } catch (err) {
         res.status(500).json({ error: "internal server error" })
@@ -196,44 +201,48 @@ bookingCntrl.MyBookings = async (req, res) => {
         res.status(501).json({ error: "server error" })
     }
 }
-async function processBookingExpiration(bookingId,io ) {
-        try {
-            const booking = await Booking.findById(bookingId);
-            if (booking && booking.approveStatus && booking.paymentStatus=="pending" ) {
-                await Booking.findOneAndDelete(bookingId);
-                console.log(`Booking ${bookingId} removed due to non-payment.`);
-                io.emit("bookingId",{id:bookingId})
-            }
-        } catch (error) {
-            console.error(`Error processing booking ${bookingId}:`, error);
+async function processBookingExpiration(bookingId, io) {
+    try {
+        const booking = await Booking.findById(bookingId);
+        if (booking && booking.approveStatus && booking.paymentStatus == "pending") {
+            await Booking.findOneAndDelete(bookingId);
+            console.log(`Booking ${bookingId} removed due to non-payment.`);
+            io.emit("bookingId", { id: bookingId })
         }
+    } catch (error) {
+        console.error(`Error processing booking ${bookingId}:`, error);
+    }
+}
+bookingCntrl.accept = async (req, res, io) => {
+    const id = req.params.id
+    console.log(id)
+    try {
+        const booking = await Booking.findByIdAndUpdate({ _id: id }, { $set: { approveStatus: true } }, { new: true })
+
+            .populate({ path: 'customerId', select: 'email' })
+            .populate({ path: 'parkingSpaceId', select: 'title' });
+        console.log(booking, 'bbbbb')
+        // const paymentDueTime = moment().add(1, 'minutes').toDate();
+        // console.log(booking,'booking')
+        // console.log(new Date(paymentDueTime),'time')
+        // await bookingQueue.add({ bookingId, paymentDueTime }, { delay: 1 * 60 * 1000 });
+        sendEmail({
+            email: booking.customerId.email,
+            text: `Your booking for ${booking.parkingSpaceId.title} is approved. Click <a href="http://localhost:3000/bookings">here</a> to make payment.`,
+            subject: "PickParking Slot Approval Status"
+        });
+        setTimeout(() => {
+            processBookingExpiration(booking._id, io);
+        }, 2 * 60 * 1000);
+
+
+        res.status(201).json(booking);
+    } catch (err) {
+        console.error("Error accepting booking:", err);
+        res.status(500).json({ error: "Internal Server Error" });
     }
 
-
-    bookingCntrl.accept = async (req, res, io) => {
-        const id = req.params.id;
-        console.log(io,'io')
-        try {
-            const booking = await Booking.findByIdAndUpdate(id, { $set: { approveStatus: true } }, { new: true })
-                .populate({ path: 'customerId', select: 'email' })
-                .populate({ path: 'parkingSpaceId', select: 'title' });
-            sendEmail({
-                email: booking.customerId.email,
-                text: `Your booking for ${booking.parkingSpaceId.title} is approved. Click <a href="http://localhost:3000/bookings">here</a> to make payment.`,
-                subject: "PickParking Slot Approval Status"
-            });
-    
-            setTimeout(() => {
-                processBookingExpiration(booking._id, io);
-            }, 2 * 60 * 1000);
-    
-            res.status(201).json(booking);
-        } catch (err) {
-            console.error("Error accepting booking:", err);
-            res.status(500).json({ error: "Internal Server Error" });
-        }
-    };
-    
+}
 bookingCntrl.listBookings = async (req, res) => {
     try {
         const bookings = await Booking.find({ approveStatus: true, paymentStatus: "success" })
@@ -254,8 +263,8 @@ bookingCntrl.adminList=async(req,res)=>{
 }
 bookingCntrl.rejectBooking = async (req, res) => {
     const id = req.params.id
-    try {
-        const booking = await Booking.findOneAndUpdate(id, { $set: { isRemoved: true } }, { new: true })
+    try {      
+        const booking = await Booking.findOneAndUpdate({_id:id}, { $set: { status: "cancel"} }, { new: true })
             .populate("customerId")
             .populate("vehicleId")
             .populate("parkingSpaceId")
@@ -282,6 +291,70 @@ bookingCntrl.paymentFailerUpdate = async (req, res) => {
         res.status(200).json(booking)
     } catch (err) {
         res.status(500).json({ error: "internal server error" })
+    }
+}
+bookingCntrl.todayBooking = async (req, res) => {
+    // const id = req.params.id
+    const ownerId=req.user.id
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), today.getHours(),today.getMinutes());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()+1)
+    console.log(startOfDay)
+    console.log(endOfDay)
+    try {
+        const parkingSpace = await ParkingSpace.find({ ownerId:ownerId})
+        //  console.log(parkingSpace)
+        if (!parkingSpace || parkingSpace.length === 0) {
+            return res.status(404).json({ error: "you dont have listed parking space" })
+        }
+        const todayBookings = []
+        for (const space of parkingSpace) {
+            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id,approveStatus: true,paymentStatus:"success" ,endDateTime: {
+                $gte: startOfDay,
+                $lt: endOfDay}})
+                .populate('customerId')
+                .populate('vehicleId')
+                .populate("parkingSpaceId")
+            todayBookings.push(...bookingOfSpace)
+        }
+        // console.log(todayBookings)
+        // const booking = await Booking.find( { parkingSpaceId: id, approveStatus: true,paymentStatus:"success",startDateTime: {
+        //     $gte: startOfDay,
+        //     $lt: endOfDay
+        //   }}).populate("customerId").populate("parkingSpaceId")
+        res.status(201).json(todayBookings)
+    } catch (err) {
+        res.status(500).json({ error: "internal server errro" })
+    }
+}
+bookingCntrl.currentBooking=async(req,res)=>{
+    const ownerId=req.user.id
+    const today = new Date()
+    const currentHour = new Date(today.getFullYear(), today.getMonth(), today.getDate(), today.getHours(),today.getMinutes());
+    //const EndCurrentTime = new Date(today.getFullYear(), today.getMonth(), today.getDate().today.getHours()+1,0,0)
+    // console.log(startOfDay)
+    // console.log(endOfDay)
+    try {
+        const parkingSpace = await ParkingSpace.find({ ownerId:ownerId})
+        //  console.log(parkingSpace)
+        if (!parkingSpace || parkingSpace.length === 0) {
+            return res.status(404).json({ error: "you dont have listed parking space" })
+        }
+        const currentBookings = []
+        for (const space of parkingSpace) {
+            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id,approveStatus: true,paymentStatus:"success",
+            startDateTime: { $lte: today },
+            endDateTime: { $gte: today }
+                
+        })  
+                .populate('customerId')
+                .populate('vehicleId')
+                .populate("parkingSpaceId")
+            currentBookings.push(...bookingOfSpace)
+        }
+        res.status(201).json(currentBookings)
+    } catch (err) {
+        res.status(500).json({ error: "internal server errro" })
     }
 }
 module.exports = bookingCntrl
