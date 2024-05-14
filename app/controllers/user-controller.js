@@ -3,8 +3,9 @@ const jwt=require('jsonwebtoken')
 const bcryptjs=require('bcryptjs')
 const _=require("lodash")
 const sendEmail=require('../utilities/node-mailer/email')
+const ParkingSpace=require('../models/parkingSpace-model')
 const {validationResult}=require('express-validator')
-
+const Booking=require('../models/booking-model')
 //otp functiion to send otp
 const generateOtp=()=>{
     const otp=Math.round(Math.random()*10000)
@@ -258,6 +259,38 @@ usersCntrl.findOwners=async(req,res)=>{
         res.status(202).json(owners)
     }catch(err){
         res.status(500).json({error:"internal server error"})
+    }
+}
+
+usersCntrl.disableOwner=async(req,res)=>{
+    const id=req.params.id
+    const ownerId=id
+    try{
+          const owner=await User.findById(id)
+          if(!owner){
+            return res.status(404).json({error:"owner not found"})
+          }
+          const parkingSpace=await ParkingSpace.find({ownerId:ownerId})
+          if(parkingSpace.length < 0 ){
+            const delteOwner=await User.findOneAndUpdate({_id:id},{$set:{isverified:!owner.isverified}},{new:true})
+              res.status(200).json(delteOwner)
+          }else{
+              
+            const bookings=[]
+            const today=new Date()
+            for(const space of parkingSpace){
+                const booking=await Booking.find({ parkingSpaceId:space._id,approveStatus: true,paymentStatus:"success", endDateTime: { $gte: today } })
+                bookings.push(...booking)
+            }
+               console.log(bookings)        
+          if(bookings.length > 0){
+              return res.status(400).json({error:"Cannot disable owner . Future bookings exist for owner space "})
+          }    
+          const disOwner=await User.findOneAndUpdate({_id:id},{$set:{isverified:!owner.isverified}},{new:true})
+            res.status(200).json(disOwner)  
+          }      
+    }catch(err){
+        res.status(500).json({error:"inernal server error"})
     }
 }
 module.exports=usersCntrl
