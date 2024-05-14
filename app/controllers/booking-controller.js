@@ -168,29 +168,39 @@ bookingCntrl.findSpace = async (req, res) => {
 }
 
 bookingCntrl.myParkingSpace = async (req, res) => {
-    const page = req.query.page || 1
-    const limit = req.query.limit || 5
-    console.log(page , limit)
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 5;
+    console.log(page, limit);
     try {
-        const id = req.user.id
-        const parkingSpace = await ParkingSpace.find({ ownerId: id })
+        const id = req.user.id;
+        const parkingSpace = await ParkingSpace.find({ ownerId: id });
         if (!parkingSpace || parkingSpace.length === 0) {
-            return res.status(404).json({ error: "you dont have listed parking space" })
+            return res.status(404).json({ error: "you don't have listed parking space" });
         }
-        const bookings = []
+        
+        const allBookings = [];
+        const bookings = [];
+
         for (const space of parkingSpace) {
-            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id }).skip((page -1)* limit).limit(limit)
+            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id })
+            .populate('customerId')
+            .populate('vehicleId')
+            .populate("parkingSpaceId")
+            allBookings.push(...bookingOfSpace);
+
+            const paginatedBookings = await Booking.find({ parkingSpaceId: space._id }).skip((page - 1) * limit).limit(limit)
                 .populate('customerId')
                 .populate('vehicleId')
                 .populate("parkingSpaceId")
-            bookings.push(...bookingOfSpace)
+            bookings.push(...paginatedBookings)
         }
-        
-        res.status(200).json(bookings)
+
+        res.status(200).json({ bookings, allBookings })
     } catch (err) {
-        res.status(500).json({ error: "internal server error" })
+        res.status(500).json({ error: "internal server error" });
     }
 }
+
 
 bookingCntrl.MyBookings = async (req, res) => {
     try {
@@ -356,6 +366,31 @@ bookingCntrl.currentBooking=async(req,res)=>{
     } catch (err) {
         res.status(500).json({ error: "internal server errro" })
     }
+}
+bookingCntrl.currentBookingRequest=async(req,res)=>{
+    const ownerId=req.user.id
+    const today=new Date()
+    try{
+        const parkingSpace = await ParkingSpace.find({ ownerId:ownerId})
+         console.log(parkingSpace)
+        if (!parkingSpace || parkingSpace.length === 0) {
+            return res.status(404).json({ error: "you dont have listed parking space" })
+        }
+        const currentBookingsRequest = []
+        for (const space of parkingSpace) {
+            const bookingOfSpace = await Booking.find({ parkingSpaceId: space._id,approveStatus:false,paymentStatus:"pending",
+            startDateTime: { $gte: today }           
+        })  
+                .populate('customerId')
+                .populate('vehicleId')
+                .populate("parkingSpaceId")
+            currentBookingsRequest.push(...bookingOfSpace)
+        }
+        res.status(202).json(currentBookingsRequest)
+    }catch(err){
+        res.status(500).json({error:"internal server error"})
+    }
+
 }
 module.exports = bookingCntrl
 

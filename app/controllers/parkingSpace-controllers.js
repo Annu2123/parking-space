@@ -4,6 +4,7 @@ const axios =require('axios')
 const _ = require('lodash')
 const { isPointWithinRadius } = require('geolib')
 const ParkingSpace = require("../models/parkingSpace-model")
+const User = require("../models/users-model")
 const parkingSpaceCntrl = {}
 
 function reverseLatLon(arr) {
@@ -86,16 +87,23 @@ parkingSpaceCntrl.approve = async (req, res) => {
 
 parkingSpaceCntrl.disable = async (req, res) => {
     const id = req.params.id
+    const ownerId=req.user.id
     try {
-        // const owner=await User.findOne({_id:req.user.id})
-        // if(!owner){
-        //     res.status(401).json({error:"unauthorised"})
-        // }
-        const parkingSpace=await ParkingSpace.findById({_id:id,ownerId:req.user.id})
-        console.log(parkingSpace)
-        if(!parkingSpace){
-            res.status(404).json({error:"parking Space not found"})
+        const findOwner=await User.findById(ownerId)
+        if(!findOwner){
+             return res.status(404).json({error:"owner not found"})
         }
+        console.log(findOwner)
+        const parkingSpace=await ParkingSpace.findById(id)
+        if(!parkingSpace){
+           return res.status(404).json({error:"parking Space not found"})
+        }if(parkingSpace.activeStatus === true){
+            const today=new Date()
+            const bookings = await Booking.find({ parkingSpaceId:id,approveStatus: true,paymentStatus:"success", endDateTime: { $gte: today } })
+        if(bookings.length > 0){
+            return res.status(400).json({error:"Cannot disable parking space. Future bookings exist for this parking"})
+        } 
+    }
         // const value=!parkingSpace.activeStatus
         const space = await ParkingSpace.findOneAndUpdate({ _id: id }, {$set:{activeStatus:!parkingSpace.activeStatus}}, { new: true })
         res.status(201).json(space)
@@ -106,7 +114,16 @@ parkingSpaceCntrl.disable = async (req, res) => {
 
 parkingSpaceCntrl.remove = async (req, res) => {
     const id = req.params.id
+    const today = new Date()
     try {
+        const findParking=await ParkingSpace.findOne({_id:id,ownerId:req.user.id})
+        if(!findParking){
+           return  res.status(404).json({error:"parking Space not found"})
+        }  
+        const bookings = await Booking.find({ parkingSpaceId:id,approveStatus: true,paymentStatus:"success", endDateTime: { $gte: today } })
+        if(bookings.length > 0){
+            return res.status(400).json({error:"Cannot delete parking space. Future bookings exist for this parking"})
+        }         
         const parkingSpace = await ParkingSpace.findOneAndDelete({ _id: id, ownerId: req.user.id })      
         res.status(200).json(parkingSpace)
     } catch (err) {

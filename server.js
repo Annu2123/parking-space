@@ -78,7 +78,7 @@ app.delete('/api/parkingSpace/remove/:id',authenticateUser,authorizeUser(['owner
 app.put('/api/parkingSpace/disable/:id',authenticateUser,authorizeUser(['owner','admin']),parkingSpaceCntrl.disable)
 app.get('/api/booking/today',authenticateUser,authorizeUser(["owner"]),bookingCntrl.todayBooking)
 app.get('/api/current/booking',authenticateUser,authorizeUser(['owner']),bookingCntrl.currentBooking)
-
+app.get('/api/parkingSpace/bookingRequest',authenticateUser,authorizeUser(["owner"]),bookingCntrl.currentBookingRequest)
 //admin routes
 app.get('/api/parkingSpace',authenticateUser,authorizeUser(['admin']), parkingSpaceCntrl.list)
 app.get('/api/owner',authenticateUser,authorizeUser(["admin"]),usersCntrl.listOwner)
@@ -86,6 +86,7 @@ app.get('/api/customer',authenticateUser,authorizeUser(["admin"]),usersCntrl.lis
 app.put('/api/parkingSpace/approve/:id', authenticateUser, authorizeUser(['admin']), checkSchema(parkingSpaceApproveValidarion), parkingSpaceCntrl.approve)
 //app.get('/api/parkingSpace/approvalList',authenticateUser,authorizeUser(["admin"]),parkingSpaceCntrl.approvalList)
 app.get('/api/allBooking',authenticateUser,authorizeUser(["admin"]),bookingCntrl.listBookings)
+app.put('/api/disable/owner/:id',authenticateUser,authorizeUser(['admin']),usersCntrl.disableOwner)
 //get all parking space within radius
 app.get('/api/parkingSpace/radius', parkingSpaceCntrl.findByLatAndLog)
 
