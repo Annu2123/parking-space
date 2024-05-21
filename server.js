@@ -132,6 +132,9 @@ app.post('/api/create-checkout-session',authenticateUser,paymentsCntrl.pay)
 app.put('/api/payment/status/update/:id' , paymentsCntrl.successUpdate)
 app.put('/api/payment/failer/:id',paymentsCntrl.failerUpdate)
 app.get('/api/payment/list',authenticateUser,authorizeUser(["customer"]),paymentsCntrl.list)
+// app.get('/api/block' , (req ,res)=>{
+//     process.exit()
+// })
 app.listen(port, () => {
 
     console.log("server is running in " + port)
