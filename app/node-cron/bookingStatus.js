@@ -9,7 +9,7 @@ const nodeCronCtlr = () => {
             const currentDateTime = format(new Date(),'yyyy-MM-dd HH:mm')
             const bookings = await Booking.find({
                 approveStatus: "true",
-                paymentStatus: "completed",
+                paymentStatus: "success",
                 status: "pending"
             }).populate({
                 path: 'customerId',
@@ -28,7 +28,7 @@ const nodeCronCtlr = () => {
 
                 const endDateTime = format(new Date(booking.endDateTime), 'yyyy-MM-dd HH:mm')
                 if (currentDateTime === endDateTime) {
-                    updatePromises.push(Booking.updateOne({ _id: booking._id }, { $set: { status: "completed" } },{new:true}));
+                    updatePromises.push(Booking.updateOne({ _id: booking._id }, { $set: { status: "success" } },{new:true}));
                 }
             }
             await Promise.all(updatePromises);
